@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="880" viewBox="0 0 620 880">
+  <style>
+    .bg { fill: #1a1b26; }
+    .primary { fill: #5f9ea0; }
+    .success { fill: #6b9e6b; }
+    .warning { fill: #c8a54e; }
+    .error { fill: #b56b6b; }
+    .muted { fill: #636c83; }
+    .label { fill: #c0caf5; }
+    .value { fill: #ffffff; font-weight: bold; }
+    text { font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace; font-size: 13px; }
+    .small { font-size: 11px; }
+  </style>
+
+  <!-- Background -->
+  <rect class="bg" width="620" height="880" rx="8"/>
+
+  <!-- Window dots -->
+  <circle cx="24" cy="18" r="6" fill="#ff5f57"/>
+  <circle cx="44" cy="18" r="6" fill="#febc2e"/>
+  <circle cx="64" cy="18" r="6" fill="#28c840"/>
+
+  <!-- Banner -->
+  <text x="24" y="55" class="primary">─── netops v2.0 ──────────────────────────────────</text>
+
+  <!-- Connectivity -->
+  <text x="24" y="90" class="primary">─── Connectivity ─────────────────────────────────</text>
+  <text x="36" y="115" class="success">✓</text><text x="54" y="115" class="label">Internet is reachable</text>
+  <text x="54" y="135" class="muted">Success rate: 100.0%</text>
+  <text x="36" y="162" class="label">google.com</text><text x="240" y="162" class="success">189ms</text>
+  <text x="36" y="182" class="label">cloudflare.com</text><text x="240" y="182" class="warning">339ms</text>
+  <text x="36" y="202" class="label">amazon.com</text><text x="240" y="202" class="warning">310ms</text>
+
+  <!-- VPN -->
+  <text x="24" y="237" class="primary">─── VPN / Proxy ──────────────────────────────────</text>
+  <text x="36" y="262" class="success">✓</text><text x="54" y="262" class="label">Traffic via</text><text x="144" y="262" class="value">en0</text><text x="178" y="262" class="muted">→ 10.0.0.138</text>
+  <text x="36" y="282" class="warning">⚠</text><text x="54" y="282" class="label">Proton VPN</text><text x="168" y="282" class="muted">(process running)</text>
+
+  <!-- Ping -->
+  <text x="24" y="317" class="primary">─── Ping ─────────────────────────────────────────</text>
+  <text x="36" y="342" class="success">✓</text><text x="54" y="342" class="label">google.com</text>
+  <text x="54" y="362" class="label">Packets</text><text x="150" y="362" class="value">4/4</text><text x="188" y="362" class="muted">(0% loss)</text>
+  <text x="54" y="382" class="label">Latency</text><text x="150" y="382" class="value">19.8ms</text><text x="220" y="382" class="muted">avg  min=18.7  max=22.0</text>
+  <text x="54" y="402" class="label">Quality</text><text x="150" y="402" class="success">Excellent</text>
+
+  <!-- SSL Certificate -->
+  <text x="24" y="437" class="primary">─── SSL Certificate ──────────────────────────────</text>
+  <text x="36" y="462" class="success">✓</text><text x="54" y="462" class="label">pifre.no</text><text x="140" y="462" class="muted">— valid</text>
+  <text x="54" y="482" class="label">Subject</text><text x="150" y="482" class="value">CN=pifre.no</text>
+  <text x="54" y="502" class="label">Issuer</text><text x="150" y="502" class="muted">Let's Encrypt (R13)</text>
+  <text x="54" y="522" class="label">Expires</text><text x="150" y="522" class="value">2026-06-29</text><text x="280" y="522" class="success">[84 days]</text>
+  <text x="54" y="542" class="label">TLS</text><text x="150" y="542" class="value">v1.3</text><text x="190" y="542" class="muted">/ TLS_AES_128_GCM_SHA256</text>
+
+  <!-- Port Scan -->
+  <text x="24" y="577" class="primary">─── Port Scan ────────────────────────────────────</text>
+  <text x="36" y="602" class="label">pifre.no</text><text x="140" y="602" class="muted">21 ports scanned in 6.0s</text>
+  <text x="36" y="622" class="success">3 open</text><text x="108" y="622" class="muted">· 0 closed · 18 filtered</text>
+  <text x="36" y="649" class="muted small">PORT</text><text x="110" y="649" class="muted small">SERVICE</text><text x="240" y="649" class="muted small">TIME</text>
+  <text x="36" y="669" class="success">80</text><text x="110" y="669" class="success">HTTP</text><text x="240" y="669" class="success">38ms</text>
+  <text x="36" y="689" class="success">443</text><text x="110" y="689" class="success">HTTPS</text><text x="240" y="689" class="success">37ms</text>
+  <text x="36" y="709" class="success">21</text><text x="110" y="709" class="success">FTP</text><text x="240" y="709" class="success">12ms</text>
+
+  <!-- Speed -->
+  <text x="24" y="744" class="primary">─── Speed ────────────────────────────────────────</text>
+  <text x="54" y="769" class="label">Download</text><text x="162" y="769" class="value">240 Mbps</text><text x="270" y="769" class="muted">(30.0 MB/s)</text>
+  <text x="54" y="789" class="label">Upload</text><text x="162" y="789" class="value">26.4 Mbps</text><text x="270" y="789" class="muted">(3.3 MB/s)</text>
+  <text x="54" y="809" class="label">Latency</text><text x="162" y="809" class="value">93ms</text><text x="210" y="809" class="muted">avg</text>
+  <text x="54" y="829" class="label">Jitter</text><text x="162" y="829" class="success">6.7ms</text>
+
+  <!-- Footer -->
+  <text x="24" y="864" class="muted">─── done · 2026-04-07 10:32 ──────────────────────</text>
+</svg>

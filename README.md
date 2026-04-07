@@ -4,6 +4,10 @@ A fast network diagnostics CLI. One command to check connectivity, speed, DNS, p
 
 Built for developers and sysadmins who want quick answers without opening a browser.
 
+<p align="center">
+  <img src="docs/preview.svg" alt="netops CLI output" width="620">
+</p>
+
 ## Install
 
 ```bash
@@ -95,63 +99,6 @@ All commands support `--json` for scripting and piping:
 netops --json cert example.com
 netops --json speed
 netops --json vpn | jq '.vpns'
-```
-
-## Example output
-
-```
-$ netops full
-
-╔═══════════════════════════════════════╗
-║           NetOps v2.0                 ║
-║   Network Diagnostics CLI Tool        ║
-╚═══════════════════════════════════════╝
-
-=== INTERNET CONNECTIVITY CHECK ===
-✓ Internet is reachable
-  Success rate: 100.0%
-
-=== VPN / PROXY STATUS ===
-✓ Traffic is going through normal interface
-✓ No VPN/proxy detected
-
-=== PING RESULTS ===
-✓ Host: google.com
-  Packets: 4 transmitted, 4 received, 0% loss
-  Time: min=12ms avg=15ms max=22ms
-  Quality: Excellent
-
-=== LATENCY TEST ===
-Average: 18ms | Jitter: 3.2ms
-
-=== SPEED TEST RESULTS ===
-Download: 240 Mbps (30 MB/s)
-Upload: 26 Mbps (3.3 MB/s)
-```
-
-```
-$ netops cert example.com
-
-=== SSL CERTIFICATE ===
-✓ Certificate is valid
-  Subject: CN=example.com
-  Issuer: CN=R13, O=Let's Encrypt, C=US
-  Valid to: 2026-04-28 [EXPIRING SOON — 30 days]
-  Protocol: TLSv1.3
-  Cipher: TLS_AES_128_GCM_SHA256
-```
-
-```
-$ netops ports example.com
-
-=== PORT SCAN RESULTS ===
-Host: example.com
-Scanned: 21 ports in 6021ms
-Open: 3 | Closed: 0 | Filtered: 18
-
-Open ports:
-  ✓ 80     HTTP                 38ms
-  ✓ 443    HTTPS                37ms
 ```
 
 ## What it detects
