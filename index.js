@@ -1,17 +1,30 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
-import ora from 'ora';
-import { ping, pingMultiple } from './lib/ping.js';
-import { dnsLookup, comprehensiveDnsCheck, reverseDnsLookup, testDnsServer } from './lib/dns.js';
-import { httpTest, checkInternetConnectivity } from './lib/http.js';
-import { comprehensiveSpeedTest, downloadSpeedTest, uploadSpeedTest, latencyTest } from './lib/speedtest.js';
-import { traceroute } from './lib/traceroute.js';
-import { scanPorts, scanCommonPorts, checkPort } from './lib/ports.js';
-import { getInterfaces, getRoutes, detectVPN } from './lib/interfaces.js';
-import { getWifiInfo } from './lib/wifi.js';
-import { whoisLookup } from './lib/whois.js';
-import { checkCertificate } from './lib/cert.js';
+import { Command } from "commander";
+import chalk from "chalk";
+import ora from "ora";
+import { createRequire } from "module";
+import { execSync, spawn } from "child_process";
+import { ping } from "./lib/ping.js";
+import {
+  dnsLookup,
+  comprehensiveDnsCheck,
+  reverseDnsLookup,
+  testDnsServer,
+} from "./lib/dns.js";
+import { httpTest, checkInternetConnectivity } from "./lib/http.js";
+import {
+  comprehensiveSpeedTest,
+  downloadSpeedTest,
+  uploadSpeedTest,
+  latencyTest,
+} from "./lib/speedtest.js";
+import { traceroute } from "./lib/traceroute.js";
+import { scanPorts, scanCommonPorts } from "./lib/ports.js";
+import { getInterfaces, getRoutes, detectVPN } from "./lib/interfaces.js";
+import { getWifiInfo } from "./lib/wifi.js";
+import { whoisLookup } from "./lib/whois.js";
+import { checkCertificate } from "./lib/cert.js";
 import {
   formatPingResults,
   formatDnsResults,
@@ -27,150 +40,202 @@ import {
   formatWifiResults,
   formatWhoisResults,
   formatCertResults,
-  setJsonMode,
+  formatLatencyResults,
+  formatDnsSpeedResults,
   outputResult,
-  printBanner
-} from './lib/formatter.js';
+  setJsonMode,
+} from "./lib/formatter.js";
+import {
+  banner,
+  footer,
+  section,
+  status,
+  kv,
+  blank,
+  setSuppressOutput,
+} from "./lib/ui.js";
+
+const require = createRequire(import.meta.url);
+const pkg = require("./package.json");
 
 const program = new Command();
 
 program
-  .name('netops')
-  .description('A lightweight CLI tool for network diagnostics and testing')
-  .version('2.0.0')
-  .option('--json', 'Output results as JSON');
+  .name("netops")
+  .description("Network diagnostics CLI")
+  .version(pkg.version)
+  .option("--json", "Output results as JSON")
+  .option("--no-color", "Disable colored output");
 
-// Apply JSON mode before all commands
-program.hook('preAction', (thisCommand) => {
+program.showSuggestionAfterError(true);
+
+// Commands that manage their own banner/footer
+const selfManagedCommands = new Set(["diagnose", "full", "report", "ask"]);
+let _compositeMode = false;
+
+// Apply global options before all commands
+program.hook("preAction", (thisCommand, actionCommand) => {
   const opts = thisCommand.opts();
   if (opts.json) setJsonMode(true);
+  if (opts.color === false) chalk.level = 0;
+
+  const cmdName = actionCommand.name();
+  if (selfManagedCommands.has(cmdName)) {
+    _compositeMode = true;
+  }
+
+  if (!_compositeMode && !opts.json) banner();
 });
 
-// Ping command
-program
-  .command('ping <host>')
-  .description('Ping a host and display statistics')
-  .option('-c, --count <number>', 'Number of ping packets to send', '4')
-  .action(async (host, options) => {
-    const spinner = ora(`Pinging ${host}...`).start();
+program.hook("postAction", (thisCommand) => {
+  const opts = thisCommand.opts();
+  if (!_compositeMode && !opts.json) footer();
+});
 
+// ==========================================
+// BASIC COMMANDS
+// ==========================================
+
+program
+  .command("ping <host>")
+  .description("Ping a host and display statistics")
+  .option("-c, --count <number>", "Number of ping packets to send", "4")
+  .action(async (host, options) => {
+    const spinner = ora({ text: `Pinging ${host}...`, color: "cyan" }).start();
     try {
       const results = await ping(host, parseInt(options.count));
       spinner.stop();
       outputResult(results, formatPingResults);
     } catch (error) {
-      spinner.fail('Ping failed');
+      spinner.fail("Ping failed");
       console.error(error.message);
     }
   });
 
-// DNS lookup command
 program
-  .command('dns <domain>')
-  .description('Perform DNS lookup for a domain')
-  .option('-t, --type <type>', 'DNS record type (A, AAAA, MX, TXT, CNAME, NS)', 'A')
-  .option('-a, --all', 'Perform comprehensive DNS check (all record types)')
+  .command("dns <domain>")
+  .description("Perform DNS lookup for a domain")
+  .option(
+    "-t, --type <type>",
+    "DNS record type (A, AAAA, MX, TXT, CNAME, NS)",
+    "A",
+  )
+  .option("-a, --all", "Perform comprehensive DNS check (all record types)")
   .action(async (domain, options) => {
     if (options.all) {
-      const spinner = ora(`Performing comprehensive DNS check for ${domain}...`).start();
+      const spinner = ora({
+        text: `DNS check for ${domain}...`,
+        color: "cyan",
+      }).start();
       try {
         const results = await comprehensiveDnsCheck(domain);
         spinner.stop();
         outputResult(results, formatComprehensiveDns);
       } catch (error) {
-        spinner.fail('DNS check failed');
+        spinner.fail("DNS check failed");
         console.error(error.message);
       }
     } else {
-      const spinner = ora(`Looking up ${options.type} records for ${domain}...`).start();
+      const spinner = ora({
+        text: `Looking up ${options.type} for ${domain}...`,
+        color: "cyan",
+      }).start();
       try {
         const results = await dnsLookup(domain, options.type);
         spinner.stop();
         outputResult(results, formatDnsResults);
       } catch (error) {
-        spinner.fail('DNS lookup failed');
+        spinner.fail("DNS lookup failed");
         console.error(error.message);
       }
     }
   });
 
-// Reverse DNS lookup command
 program
-  .command('rdns <ip>')
-  .description('Perform reverse DNS lookup for an IP address')
+  .command("rdns <ip>")
+  .description("Reverse DNS lookup for an IP address")
   .action(async (ip) => {
-    const spinner = ora(`Performing reverse DNS lookup for ${ip}...`).start();
-
+    const spinner = ora({
+      text: `Reverse DNS for ${ip}...`,
+      color: "cyan",
+    }).start();
     try {
       const results = await reverseDnsLookup(ip);
       spinner.stop();
       outputResult(results, (r) => {
+        section("Reverse DNS");
         if (r.success) {
-          console.log(`\nHostnames for ${ip}:`);
-          r.hostnames.forEach(hostname => console.log(`  - ${hostname}`));
-          console.log(`Response time: ${r.responseTime}ms`);
+          status(
+            "ok",
+            `${ip}${r.responseTime ? " — " + r.responseTime + "ms" : ""}`,
+          );
+          for (const hostname of r.hostnames) {
+            kv("Host", hostname);
+          }
         } else {
-          console.error(`Failed: ${r.error}`);
+          status("fail", `${ip} — ${r.error}`);
         }
       });
     } catch (error) {
-      spinner.fail('Reverse DNS lookup failed');
+      spinner.fail("Reverse DNS lookup failed");
       console.error(error.message);
     }
   });
 
-// HTTP test command
 program
-  .command('http <url>')
-  .description('Test HTTP/HTTPS connectivity and measure response time')
-  .option('-m, --method <method>', 'HTTP method', 'GET')
+  .command("http <url>")
+  .description("Test HTTP/HTTPS connectivity and measure response time")
+  .option("-m, --method <method>", "HTTP method", "GET")
   .action(async (url, options) => {
-    const spinner = ora(`Testing ${url}...`).start();
-
+    const spinner = ora({ text: `Testing ${url}...`, color: "cyan" }).start();
     try {
       const results = await httpTest(url, { method: options.method });
       spinner.stop();
       outputResult(results, formatHttpResults);
     } catch (error) {
-      spinner.fail('HTTP test failed');
+      spinner.fail("HTTP test failed");
       console.error(error.message);
     }
   });
 
-// Internet connectivity check
 program
-  .command('check')
-  .description('Check internet connectivity')
+  .command("check")
+  .description("Check internet connectivity")
   .action(async () => {
-    const spinner = ora('Checking internet connectivity...').start();
-
+    const spinner = ora({
+      text: "Checking connectivity...",
+      color: "cyan",
+    }).start();
     try {
       const results = await checkInternetConnectivity();
       spinner.stop();
       outputResult(results, formatConnectivityResults);
     } catch (error) {
-      spinner.fail('Connectivity check failed');
+      spinner.fail("Connectivity check failed");
       console.error(error.message);
     }
   });
 
-// Speed test command
 program
-  .command('speed')
-  .description('Run a comprehensive internet speed test')
-  .option('-d, --download-only', 'Run download test only')
-  .option('-u, --upload-only', 'Run upload test only')
+  .command("speed")
+  .description("Run a comprehensive internet speed test")
+  .option("-d, --download-only", "Run download test only")
+  .option("-u, --upload-only", "Run upload test only")
   .action(async (options) => {
-    printBanner();
-
     try {
       if (options.downloadOnly) {
-        const spinner = ora('Testing download speed...').start();
+        const spinner = ora({
+          text: "Testing download speed...",
+          color: "cyan",
+        }).start();
         const download = await downloadSpeedTest(10000);
         spinner.stop();
         outputResult({ download }, formatSpeedTestResults);
       } else if (options.uploadOnly) {
-        const spinner = ora('Testing upload speed...').start();
+        const spinner = ora({
+          text: "Testing upload speed...",
+          color: "cyan",
+        }).start();
         const upload = await uploadSpeedTest(8000);
         spinner.stop();
         outputResult({ upload }, formatSpeedTestResults);
@@ -179,104 +244,87 @@ program
         outputResult(results, formatSpeedTestResults);
       }
     } catch (error) {
-      console.error('Speed test failed:', error.message);
+      console.error("Speed test failed:", error.message);
     }
   });
 
-// Latency test command
 program
-  .command('latency')
-  .description('Test network latency')
-  .option('-c, --count <number>', 'Number of tests to run', '10')
+  .command("latency")
+  .description("Test network latency")
+  .option("-c, --count <number>", "Number of tests to run", "10")
   .action(async (options) => {
-    const spinner = ora('Testing latency...').start();
-
+    const spinner = ora({ text: "Testing latency...", color: "cyan" }).start();
     try {
       const results = await latencyTest(parseInt(options.count));
       spinner.stop();
-
-      outputResult(results, (r) => {
-        if (r.success) {
-          console.log('\n=== LATENCY TEST RESULTS ===\n');
-          console.log(`Average: ${r.avgLatency}ms`);
-          console.log(`Min: ${r.minLatency}ms`);
-          console.log(`Max: ${r.maxLatency}ms`);
-          console.log(`Jitter: ${r.jitter}ms`);
-          console.log(`Std Dev: ${r.stdDev}ms`);
-          console.log(`Tests: ${r.count}/${options.count}`);
-        } else {
-          console.error(`Failed: ${r.error}`);
-        }
-      });
+      outputResult(results, formatLatencyResults);
     } catch (error) {
-      spinner.fail('Latency test failed');
+      spinner.fail("Latency test failed");
       console.error(error.message);
     }
   });
 
-// DNS server speed test
 program
-  .command('dns-speed')
-  .description('Test DNS server response time')
-  .option('-d, --domain <domain>', 'Domain to test', 'google.com')
-  .option('-i, --iterations <number>', 'Number of iterations', '5')
+  .command("dns-speed")
+  .description("Test DNS server response time")
+  .option("-d, --domain <domain>", "Domain to test", "google.com")
+  .option("-i, --iterations <number>", "Number of iterations", "5")
   .action(async (options) => {
-    const spinner = ora('Testing DNS server speed...').start();
-
+    const spinner = ora({
+      text: "Testing DNS speed...",
+      color: "cyan",
+    }).start();
     try {
-      const results = await testDnsServer(options.domain, parseInt(options.iterations));
+      const results = await testDnsServer(
+        options.domain,
+        parseInt(options.iterations),
+      );
       spinner.stop();
-
-      outputResult(results, (r) => {
-        console.log('\n=== DNS SERVER SPEED TEST ===\n');
-        console.log(`Domain: ${r.domain}`);
-        console.log(`Average: ${r.avgTime}ms`);
-        console.log(`Min: ${r.minTime}ms`);
-        console.log(`Max: ${r.maxTime}ms`);
-        console.log(`Iterations: ${r.iterations}`);
-      });
+      outputResult(results, formatDnsSpeedResults);
     } catch (error) {
-      spinner.fail('DNS speed test failed');
+      spinner.fail("DNS speed test failed");
       console.error(error.message);
     }
   });
 
 // ==========================================
-// NEW COMMANDS
+// NETWORK COMMANDS
 // ==========================================
 
-// Traceroute command
 program
-  .command('trace <host>')
-  .description('Trace the route to a host')
-  .option('-m, --max-hops <number>', 'Maximum number of hops', '30')
+  .command("trace <host>")
+  .description("Trace the route to a host")
+  .option("-m, --max-hops <number>", "Maximum number of hops", "30")
   .action(async (host, options) => {
-    const spinner = ora(`Tracing route to ${host}...`).start();
-
+    const spinner = ora({
+      text: `Tracing route to ${host}...`,
+      color: "cyan",
+    }).start();
     try {
       const results = await traceroute(host, parseInt(options.maxHops));
       spinner.stop();
       outputResult(results, formatTracerouteResults);
     } catch (error) {
-      spinner.fail('Traceroute failed');
+      spinner.fail("Traceroute failed");
       console.error(error.message);
     }
   });
 
-// Port scan command
 program
-  .command('ports <host>')
-  .description('Scan ports on a host')
-  .option('-p, --ports <ports>', 'Comma-separated list of ports or range (e.g. 80,443 or 1-1024)')
-  .option('-t, --timeout <ms>', 'Timeout per port in ms', '3000')
+  .command("ports <host>")
+  .description("Scan ports on a host")
+  .option(
+    "-p, --ports <ports>",
+    "Comma-separated list of ports or range (e.g. 80,443 or 1-1024)",
+  )
+  .option("-t, --timeout <ms>", "Timeout per port in ms", "3000")
   .action(async (host, options) => {
     let ports;
-
     if (options.ports) {
       ports = [];
-      for (const part of options.ports.split(',')) {
-        if (part.includes('-')) {
-          const [start, end] = part.split('-').map(Number);
+      for (const part of options.ports.split(",")) {
+        if (part.includes("-")) {
+          const [start, end] = part.split("-").map(Number);
           for (let i = start; i <= end; i++) ports.push(i);
         } else {
           ports.push(parseInt(part));
@@ -284,8 +332,10 @@ program
       }
     }
 
-    const label = ports ? `Scanning ${ports.length} ports on ${host}` : `Scanning common ports on ${host}`;
-    const spinner = ora(`${label}...`).start();
+    const label = ports
+      ? `Scanning ${ports.length} ports on ${host}`
+      : `Scanning common ports on ${host}`;
+    const spinner = ora({ text: `${label}...`, color: "cyan" }).start();
 
     try {
       const results = ports
@@ -294,271 +344,347 @@ program
       spinner.stop();
       outputResult(results, formatPortResults);
     } catch (error) {
-      spinner.fail('Port scan failed');
+      spinner.fail("Port scan failed");
       console.error(error.message);
     }
   });
 
-// Network interfaces command
 program
-  .command('iface')
-  .description('Show network interfaces and IP addresses')
+  .command("iface")
+  .description("Show network interfaces and IP addresses")
   .action(async () => {
     try {
       const results = await getInterfaces();
       outputResult(results, formatInterfaceResults);
     } catch (error) {
-      console.error('Failed to get interfaces:', error.message);
+      console.error("Failed to get interfaces:", error.message);
     }
   });
 
-// Routing table command
 program
-  .command('route')
-  .description('Show routing table and default gateway')
+  .command("route")
+  .description("Show routing table and default gateway")
   .action(async () => {
-    const spinner = ora('Getting routing table...').start();
-
+    const spinner = ora({
+      text: "Getting routing table...",
+      color: "cyan",
+    }).start();
     try {
       const results = await getRoutes();
       spinner.stop();
       outputResult(results, formatRouteResults);
     } catch (error) {
-      spinner.fail('Failed to get routes');
+      spinner.fail("Failed to get routes");
       console.error(error.message);
     }
   });
 
-// VPN detection command
 program
-  .command('vpn')
-  .description('Detect active VPN and proxy connections')
+  .command("vpn")
+  .description("Detect active VPN and proxy connections")
   .action(async () => {
-    const spinner = ora('Detecting VPN/proxy...').start();
-
+    const spinner = ora({
+      text: "Detecting VPN/proxy...",
+      color: "cyan",
+    }).start();
     try {
       const results = await detectVPN();
       spinner.stop();
       outputResult(results, formatVpnResults);
     } catch (error) {
-      spinner.fail('VPN detection failed');
+      spinner.fail("VPN detection failed");
       console.error(error.message);
     }
   });
 
-// WiFi info command
 program
-  .command('wifi')
-  .description('Show WiFi connection details (signal, channel, noise)')
+  .command("wifi")
+  .description("Show WiFi connection details (signal, channel, noise)")
   .action(async () => {
-    const spinner = ora('Getting WiFi info...').start();
-
+    const spinner = ora({
+      text: "Getting WiFi info...",
+      color: "cyan",
+    }).start();
     try {
       const results = await getWifiInfo();
       spinner.stop();
       outputResult(results, formatWifiResults);
     } catch (error) {
-      spinner.fail('WiFi check failed');
+      spinner.fail("WiFi check failed");
       console.error(error.message);
     }
   });
 
-// WHOIS command
-program
-  .command('whois <domain>')
-  .description('WHOIS lookup for a domain')
-  .action(async (domain) => {
-    const spinner = ora(`Looking up WHOIS for ${domain}...`).start();
+// ==========================================
+// LOOKUP COMMANDS
+// ==========================================
 
+program
+  .command("whois <domain>")
+  .description("WHOIS lookup for a domain")
+  .action(async (domain) => {
+    const spinner = ora({
+      text: `WHOIS for ${domain}...`,
+      color: "cyan",
+    }).start();
     try {
       const results = await whoisLookup(domain);
       spinner.stop();
       outputResult(results, formatWhoisResults);
     } catch (error) {
-      spinner.fail('WHOIS lookup failed');
+      spinner.fail("WHOIS lookup failed");
       console.error(error.message);
     }
   });
 
-// SSL certificate check command
 program
-  .command('cert <host>')
-  .description('Check SSL/TLS certificate for a host')
-  .option('-p, --port <number>', 'Port number', '443')
+  .command("cert <host>")
+  .description("Check SSL/TLS certificate for a host")
+  .option("-p, --port <number>", "Port number", "443")
   .action(async (host, options) => {
-    const spinner = ora(`Checking certificate for ${host}...`).start();
-
+    const spinner = ora({
+      text: `Checking certificate for ${host}...`,
+      color: "cyan",
+    }).start();
     try {
       const results = await checkCertificate(host, parseInt(options.port));
       spinner.stop();
       outputResult(results, formatCertResults);
     } catch (error) {
-      spinner.fail('Certificate check failed');
+      spinner.fail("Certificate check failed");
       console.error(error.message);
     }
+  });
+
+// ==========================================
+// REPORT / ASK COMMANDS
+// ==========================================
+
+program
+  .command("report")
+  .description("Generate a markdown network report (for piping to LLMs)")
+  .action(async () => {
+    _compositeMode = true;
+    setSuppressOutput(true);
+    const { generateReport } = await import("./lib/report.js");
+    const report = await generateReport();
+    setSuppressOutput(false);
+    console.log(report);
+  });
+
+program
+  .command("ask [prompt]")
+  .description("Run diagnostics and ask Claude to analyze the results")
+  .action(async (prompt) => {
+    _compositeMode = true;
+
+    // Check if claude is available
+    try {
+      execSync("which claude", { stdio: "ignore" });
+    } catch {
+      console.error(
+        "Error: claude CLI not found. Install from https://claude.ai/claude-code",
+      );
+      process.exit(1);
+    }
+
+    // Generate report
+    setSuppressOutput(true);
+    const { generateReport } = await import("./lib/report.js");
+    const report = await generateReport();
+    setSuppressOutput(false);
+
+    const defaultPrompt =
+      "Analyze this network diagnostic report. Flag any issues and suggest fixes. Be concise.";
+    const userPrompt = prompt || defaultPrompt;
+
+    const claude = spawn("claude", ["-p", userPrompt], {
+      stdio: ["pipe", "inherit", "inherit"],
+    });
+
+    claude.stdin.write(report);
+    claude.stdin.end();
+
+    claude.on("close", (code) => {
+      process.exit(code || 0);
+    });
   });
 
 // ==========================================
 // COMPOSITE COMMANDS
 // ==========================================
 
-// All-in-one diagnostic command
 program
-  .command('diagnose')
-  .description('Run comprehensive network diagnostics (no speed test)')
+  .command("diagnose")
+  .description("Run comprehensive network diagnostics (no speed test)")
   .action(async () => {
-    printBanner();
-    console.log('Running comprehensive network diagnostics...\n');
+    _compositeMode = true;
+    banner();
 
-    // Internet connectivity
-    const spinner1 = ora('Step 1/6: Checking internet connectivity...').start();
+    const spinner1 = ora({
+      text: "Checking connectivity...",
+      color: "cyan",
+    }).start();
     const connectivity = await checkInternetConnectivity();
     spinner1.stop();
     formatConnectivityResults(connectivity);
 
     if (!connectivity.connected) {
-      console.log('\nInternet connectivity issues detected. Stopping diagnostics.');
+      console.log("\nInternet connectivity issues detected. Stopping.");
+      footer();
       return;
     }
 
-    // VPN/proxy check
-    const spinner2 = ora('Step 2/6: Checking VPN/proxy...').start();
+    const spinner2 = ora({
+      text: "Checking VPN/proxy...",
+      color: "cyan",
+    }).start();
     const vpnResult = await detectVPN();
     spinner2.stop();
     formatVpnResults(vpnResult);
 
-    // DNS test
-    const spinner3 = ora('Step 3/6: Testing DNS resolution...').start();
-    const dnsResult = await dnsLookup('google.com', 'A');
+    const spinner3 = ora({ text: "Testing DNS...", color: "cyan" }).start();
+    const dnsResult = await dnsLookup("google.com", "A");
     spinner3.stop();
     formatDnsResults(dnsResult);
 
-    // Ping test
-    const spinner4 = ora('Step 4/6: Testing ping to google.com...').start();
-    const pingResult = await ping('google.com', 4);
+    const spinner4 = ora({
+      text: "Pinging google.com...",
+      color: "cyan",
+    }).start();
+    const pingResult = await ping("google.com", 4);
     spinner4.stop();
     formatPingResults(pingResult);
 
-    // Latency test
-    const spinner5 = ora('Step 5/6: Testing latency...').start();
+    const spinner5 = ora({ text: "Testing latency...", color: "cyan" }).start();
     const latencyResult = await latencyTest(5);
     spinner5.stop();
+    formatLatencyResults(latencyResult);
 
-    if (latencyResult.success) {
-      console.log('\n=== LATENCY TEST ===\n');
-      console.log(`Average: ${latencyResult.avgLatency}ms`);
-      console.log(`Min: ${latencyResult.minLatency}ms`);
-      console.log(`Max: ${latencyResult.maxLatency}ms`);
-      console.log(`Jitter: ${latencyResult.jitter}ms`);
-    }
-
-    // Interfaces
-    const spinner6 = ora('Step 6/6: Getting interface info...').start();
-    const ifaceResult = await getInterfaces();
-    spinner6.stop();
-    formatInterfaceResults(ifaceResult);
-
-    console.log('\n' + '='.repeat(50));
-    console.log('Diagnostics complete!');
-  });
-
-// Full test suite - everything including speed test
-program
-  .command('full')
-  .description('Run ALL tests including speed test (comprehensive + speed)')
-  .action(async () => {
-    printBanner();
-    console.log('Running FULL network test suite...\n');
-    console.log('This will take approximately 30-60 seconds.\n');
-
-    // Internet connectivity
-    const spinner1 = ora('Step 1/9: Checking internet connectivity...').start();
-    const connectivity = await checkInternetConnectivity();
-    spinner1.stop();
-    formatConnectivityResults(connectivity);
-
-    if (!connectivity.connected) {
-      console.log('\nInternet connectivity issues detected. Stopping tests.');
-      return;
-    }
-
-    // VPN/proxy check
-    const spinner2 = ora('Step 2/9: Checking VPN/proxy...').start();
-    const vpnResult = await detectVPN();
-    spinner2.stop();
-    formatVpnResults(vpnResult);
-
-    // Interface info
-    const spinnerIface = ora('Step 3/9: Getting interface info...').start();
+    const spinnerIface = ora({
+      text: "Getting interfaces...",
+      color: "cyan",
+    }).start();
     const ifaceResult = await getInterfaces();
     spinnerIface.stop();
     formatInterfaceResults(ifaceResult);
 
-    // DNS comprehensive check
-    const spinner3 = ora('Step 4/9: Performing comprehensive DNS check...').start();
-    const dnsResult = await comprehensiveDnsCheck('google.com');
+    footer();
+  });
+
+program
+  .command("full")
+  .description("Run ALL tests including speed test")
+  .action(async () => {
+    _compositeMode = true;
+    banner();
+    blank();
+
+    const spinner1 = ora({
+      text: "Checking connectivity...",
+      color: "cyan",
+    }).start();
+    const connectivity = await checkInternetConnectivity();
+    spinner1.stop();
+    formatConnectivityResults(connectivity);
+
+    if (!connectivity.connected) {
+      console.log("\nInternet connectivity issues detected. Stopping.");
+      footer();
+      return;
+    }
+
+    const spinner2 = ora({
+      text: "Checking VPN/proxy...",
+      color: "cyan",
+    }).start();
+    const vpnResult = await detectVPN();
+    spinner2.stop();
+    formatVpnResults(vpnResult);
+
+    const spinnerIface = ora({
+      text: "Getting interfaces...",
+      color: "cyan",
+    }).start();
+    const ifaceResult = await getInterfaces();
+    spinnerIface.stop();
+    formatInterfaceResults(ifaceResult);
+
+    const spinner3 = ora({ text: "DNS check...", color: "cyan" }).start();
+    const dnsResult = await comprehensiveDnsCheck("google.com");
     spinner3.stop();
     formatComprehensiveDns(dnsResult);
 
-    // DNS server speed
-    const spinner4 = ora('Step 5/9: Testing DNS server speed...').start();
-    const dnsSpeedResult = await testDnsServer('google.com', 5);
+    const spinner4 = ora({
+      text: "Testing DNS speed...",
+      color: "cyan",
+    }).start();
+    const dnsSpeedResult = await testDnsServer("google.com", 5);
     spinner4.stop();
-    console.log('\n=== DNS SERVER SPEED ===\n');
-    console.log(`Average: ${dnsSpeedResult.avgTime}ms`);
-    console.log(`Min: ${dnsSpeedResult.minTime}ms`);
-    console.log(`Max: ${dnsSpeedResult.maxTime}ms`);
+    formatDnsSpeedResults(dnsSpeedResult);
 
-    // Ping test
-    const spinner5 = ora('Step 6/9: Testing ping to google.com...').start();
-    const pingResult = await ping('google.com', 4);
+    const spinner5 = ora({
+      text: "Pinging google.com...",
+      color: "cyan",
+    }).start();
+    const pingResult = await ping("google.com", 4);
     spinner5.stop();
     formatPingResults(pingResult);
 
-    // HTTP test
-    const spinner6 = ora('Step 7/9: Testing HTTP connectivity...').start();
-    const httpResult = await httpTest('https://www.google.com');
+    const spinner6 = ora({ text: "Testing HTTP...", color: "cyan" }).start();
+    const httpResult = await httpTest("https://www.google.com");
     spinner6.stop();
     formatHttpResults(httpResult);
 
-    // Latency test
-    const spinner7 = ora('Step 8/9: Testing latency...').start();
+    const spinner7 = ora({ text: "Testing latency...", color: "cyan" }).start();
     const latencyResult = await latencyTest(10);
     spinner7.stop();
-    if (latencyResult.success) {
-      console.log('\n=== LATENCY TEST ===\n');
-      console.log(`Average: ${latencyResult.avgLatency}ms`);
-      console.log(`Min: ${latencyResult.minLatency}ms`);
-      console.log(`Max: ${latencyResult.maxLatency}ms`);
-      console.log(`Jitter: ${latencyResult.jitter}ms`);
-    }
+    formatLatencyResults(latencyResult);
 
-    // Speed test (this is the longest part)
-    console.log('\n' + '='.repeat(50));
-    console.log('Step 9/9: Running comprehensive speed test...');
-    console.log('This may take 20-30 seconds...\n');
+    console.log("\nRunning speed test (20-30s)...\n");
     const speedResults = await comprehensiveSpeedTest();
     formatSpeedTestResults(speedResults);
 
-    // Final summary
-    console.log('\n' + '='.repeat(50));
-    console.log('='.repeat(50));
-    console.log('FULL TEST SUITE COMPLETE!');
-    console.log('='.repeat(50));
-    console.log('\nSUMMARY:');
-    console.log(`  ${connectivity.connected ? '✓' : '✗'} Internet Connectivity: ${connectivity.connected ? 'Connected' : 'Disconnected'}`);
-    console.log(`  ${vpnResult.vpnDetected ? '⚡' : '✓'} VPN/Proxy: ${vpnResult.vpnDetected ? `Detected (${vpnResult.vpns.length})` : 'None detected'}`);
-    console.log(`  ${dnsResult.A?.success ? '✓' : '✗'} DNS Resolution: ${dnsResult.A?.success ? 'Working' : 'Failed'}`);
-    console.log(`  ${pingResult.success ? '✓' : '✗'} Ping: ${pingResult.success ? pingResult.avgTime + 'ms avg' : 'Failed'}`);
-    console.log(`  ${httpResult.success ? '✓' : '✗'} HTTP: ${httpResult.success ? httpResult.statusCode : 'Failed'}`);
-    console.log(`  ${latencyResult.success ? '✓' : '✗'} Latency: ${latencyResult.success ? latencyResult.avgLatency + 'ms avg (jitter: ' + latencyResult.jitter + 'ms)' : 'Failed'}`);
+    // Summary
+    section("Summary");
+    const connIcon = connectivity.connected ? "ok" : "fail";
+    const vpnIcon = vpnResult.vpnDetected ? "warn" : "ok";
+    const dnsIcon = dnsResult.A?.success ? "ok" : "fail";
+    const pingIcon = pingResult.success ? "ok" : "fail";
+    const httpIcon = httpResult.success ? "ok" : "fail";
+
+    status(
+      connIcon,
+      `Connectivity: ${connectivity.connected ? "Connected" : "Disconnected"}`,
+    );
+    status(
+      vpnIcon,
+      `VPN/Proxy: ${vpnResult.vpnDetected ? vpnResult.vpns.length + " detected" : "None"}`,
+    );
+    status(dnsIcon, `DNS: ${dnsResult.A?.success ? "Working" : "Failed"}`);
+    status(
+      pingIcon,
+      `Ping: ${pingResult.success ? pingResult.avgTime + "ms" : "Failed"}`,
+    );
+    status(
+      httpIcon,
+      `HTTP: ${httpResult.success ? httpResult.statusCode : "Failed"}`,
+    );
+
+    if (latencyResult.success) {
+      status(
+        "ok",
+        `Latency: ${latencyResult.avgLatency}ms avg, jitter: ${latencyResult.jitter}ms`,
+      );
+    }
     if (speedResults.download?.success) {
-      console.log(`  ✓ Download Speed: ${speedResults.download.speedMbps} Mbps`);
+      status("ok", `Download: ${speedResults.download.speedMbps} Mbps`);
     }
     if (speedResults.upload?.success) {
-      console.log(`  ✓ Upload Speed: ${speedResults.upload.speedMbps} Mbps`);
+      status("ok", `Upload: ${speedResults.upload.speedMbps} Mbps`);
     }
-    console.log('\n' + '='.repeat(50));
+
+    footer();
   });
 
 program.parse();

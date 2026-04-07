@@ -84,12 +84,34 @@ netops check
 | `netops vpn` | Detect active VPN and proxy connections |
 | `netops wifi` | WiFi signal strength, channel, noise, SNR |
 
+### AI & Reporting
+
+| Command | Description |
+|---------|-------------|
+| `netops report` | Generate markdown report (for piping to LLMs) |
+| `netops ask` | Run diagnostics and ask Claude to analyze |
+| `netops ask "why is my jitter high?"` | Ask a specific question |
+
 ### Composite
 
 | Command | Description |
 |---------|-------------|
 | `netops diagnose` | Full diagnostics without speed test |
 | `netops full` | Everything including speed test |
+
+## AI-powered diagnostics
+
+```bash
+# Let Claude analyze your network
+netops ask
+
+# Ask a specific question
+netops ask "why is my jitter so high?"
+
+# Pipe to any LLM
+netops report | claude -p "analyze this"
+netops report | llm "what's wrong?"
+```
 
 ## JSON output
 

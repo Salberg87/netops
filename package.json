@@ -1,6 +1,6 @@
 {
   "name": "netops",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A lightweight CLI tool for testing internet speed, health, pings, servers, DNS and other network diagnostics",
   "main": "index.js",
   "type": "module",
