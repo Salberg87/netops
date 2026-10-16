@@ -11,7 +11,7 @@ Built for developers and sysadmins who want quick answers without opening a brow
 ## Install
 
 ```bash
-npm install -g netops
+npm install -g github:Salberg87/netops
 ```
 
 ## Quick start
