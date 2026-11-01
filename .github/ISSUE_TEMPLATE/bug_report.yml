@@ -1,0 +1,34 @@
+name: Bug report
+description: Something in netops (CLI, skills or mod) doesn't work
+labels: [bug]
+body:
+  - type: dropdown
+    id: part
+    attributes:
+      label: Which part?
+      options: [CLI, Claude skill, Claude mod (tools / pane / status line), Install]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Command or prompt that reproduces it
+      description: e.g. `netops --json dns example.com -a`, or what you asked Claude.
+      render: shell
+  - type: input
+    id: env
+    attributes:
+      label: OS, Node version, Claude Code version
+      placeholder: macOS 15.1, Node 22.11, Claude Code 2.1.x
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: Please remove IP addresses, hostnames or SSIDs you don't want public.
+      render: text

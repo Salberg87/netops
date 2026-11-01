@@ -3,6 +3,8 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import ora from "ora";
+import { isJsonMode } from "./lib/ui.js";
+import { runDiagnostics } from "./lib/diagnose.js";
 import { createRequire } from "module";
 import { execSync, spawn } from "child_process";
 import { ping } from "./lib/ping.js";
@@ -60,6 +62,9 @@ const pkg = require("./package.json");
 
 const program = new Command();
 
+// Spinners go silent in --json mode so Claude (and scripts) get clean output.
+const spin = (opts) => ora({ ...opts, isSilent: isJsonMode() });
+
 program
   .name("netops")
   .description("Network diagnostics CLI")
@@ -101,7 +106,7 @@ program
   .description("Ping a host and display statistics")
   .option("-c, --count <number>", "Number of ping packets to send", "4")
   .action(async (host, options) => {
-    const spinner = ora({ text: `Pinging ${host}...`, color: "cyan" }).start();
+    const spinner = spin({ text: `Pinging ${host}...`, color: "cyan" }).start();
     try {
       const results = await ping(host, parseInt(options.count));
       spinner.stop();
@@ -123,7 +128,7 @@ program
   .option("-a, --all", "Perform comprehensive DNS check (all record types)")
   .action(async (domain, options) => {
     if (options.all) {
-      const spinner = ora({
+      const spinner = spin({
         text: `DNS check for ${domain}...`,
         color: "cyan",
       }).start();
@@ -136,7 +141,7 @@ program
         console.error(error.message);
       }
     } else {
-      const spinner = ora({
+      const spinner = spin({
         text: `Looking up ${options.type} for ${domain}...`,
         color: "cyan",
       }).start();
@@ -155,7 +160,7 @@ program
   .command("rdns <ip>")
   .description("Reverse DNS lookup for an IP address")
   .action(async (ip) => {
-    const spinner = ora({
+    const spinner = spin({
       text: `Reverse DNS for ${ip}...`,
       color: "cyan",
     }).start();
@@ -187,7 +192,7 @@ program
   .description("Test HTTP/HTTPS connectivity and measure response time")
   .option("-m, --method <method>", "HTTP method", "GET")
   .action(async (url, options) => {
-    const spinner = ora({ text: `Testing ${url}...`, color: "cyan" }).start();
+    const spinner = spin({ text: `Testing ${url}...`, color: "cyan" }).start();
     try {
       const results = await httpTest(url, { method: options.method });
       spinner.stop();
@@ -202,7 +207,7 @@ program
   .command("check")
   .description("Check internet connectivity")
   .action(async () => {
-    const spinner = ora({
+    const spinner = spin({
       text: "Checking connectivity...",
       color: "cyan",
     }).start();
@@ -224,7 +229,7 @@ program
   .action(async (options) => {
     try {
       if (options.downloadOnly) {
-        const spinner = ora({
+        const spinner = spin({
           text: "Testing download speed...",
           color: "cyan",
         }).start();
@@ -232,7 +237,7 @@ program
         spinner.stop();
         outputResult({ download }, formatSpeedTestResults);
       } else if (options.uploadOnly) {
-        const spinner = ora({
+        const spinner = spin({
           text: "Testing upload speed...",
           color: "cyan",
         }).start();
@@ -253,7 +258,7 @@ program
   .description("Test network latency")
   .option("-c, --count <number>", "Number of tests to run", "10")
   .action(async (options) => {
-    const spinner = ora({ text: "Testing latency...", color: "cyan" }).start();
+    const spinner = spin({ text: "Testing latency...", color: "cyan" }).start();
     try {
       const results = await latencyTest(parseInt(options.count));
       spinner.stop();
@@ -270,7 +275,7 @@ program
   .option("-d, --domain <domain>", "Domain to test", "google.com")
   .option("-i, --iterations <number>", "Number of iterations", "5")
   .action(async (options) => {
-    const spinner = ora({
+    const spinner = spin({
       text: "Testing DNS speed...",
       color: "cyan",
     }).start();
@@ -296,7 +301,7 @@ program
   .description("Trace the route to a host")
   .option("-m, --max-hops <number>", "Maximum number of hops", "30")
   .action(async (host, options) => {
-    const spinner = ora({
+    const spinner = spin({
       text: `Tracing route to ${host}...`,
       color: "cyan",
     }).start();
@@ -335,7 +340,7 @@ program
     const label = ports
       ? `Scanning ${ports.length} ports on ${host}`
       : `Scanning common ports on ${host}`;
-    const spinner = ora({ text: `${label}...`, color: "cyan" }).start();
+    const spinner = spin({ text: `${label}...`, color: "cyan" }).start();
 
     try {
       const results = ports
@@ -365,7 +370,7 @@ program
   .command("route")
   .description("Show routing table and default gateway")
   .action(async () => {
-    const spinner = ora({
+    const spinner = spin({
       text: "Getting routing table...",
       color: "cyan",
     }).start();
@@ -383,7 +388,7 @@ program
   .command("vpn")
   .description("Detect active VPN and proxy connections")
   .action(async () => {
-    const spinner = ora({
+    const spinner = spin({
       text: "Detecting VPN/proxy...",
       color: "cyan",
     }).start();
@@ -401,7 +406,7 @@ program
   .command("wifi")
   .description("Show WiFi connection details (signal, channel, noise)")
   .action(async () => {
-    const spinner = ora({
+    const spinner = spin({
       text: "Getting WiFi info...",
       color: "cyan",
     }).start();
@@ -423,7 +428,7 @@ program
   .command("whois <domain>")
   .description("WHOIS lookup for a domain")
   .action(async (domain) => {
-    const spinner = ora({
+    const spinner = spin({
       text: `WHOIS for ${domain}...`,
       color: "cyan",
     }).start();
@@ -442,7 +447,7 @@ program
   .description("Check SSL/TLS certificate for a host")
   .option("-p, --port <number>", "Port number", "443")
   .action(async (host, options) => {
-    const spinner = ora({
+    const spinner = spin({
       text: `Checking certificate for ${host}...`,
       color: "cyan",
     }).start();
@@ -463,13 +468,22 @@ program
 program
   .command("report")
   .description("Generate a markdown network report (for piping to LLMs)")
-  .action(async () => {
+  .option("-s, --speed", "Include a speed test (adds ~20-30s)")
+  .option("--target <host>", "Host used for DNS/ping checks", "google.com")
+  .action(async (options) => {
     _compositeMode = true;
     setSuppressOutput(true);
-    const { generateReport } = await import("./lib/report.js");
-    const report = await generateReport();
+    const results = await runDiagnostics({
+      speed: !!options.speed,
+      target: options.target,
+    });
     setSuppressOutput(false);
-    console.log(report);
+    if (isJsonMode()) {
+      console.log(JSON.stringify(results, null, 2));
+      return;
+    }
+    const { renderReport } = await import("./lib/report.js");
+    console.log(renderReport(results));
   });
 
 program
@@ -519,9 +533,13 @@ program
   .description("Run comprehensive network diagnostics (no speed test)")
   .action(async () => {
     _compositeMode = true;
+    if (isJsonMode()) {
+      console.log(JSON.stringify(await runDiagnostics({ speed: false }), null, 2));
+      return;
+    }
     banner();
 
-    const spinner1 = ora({
+    const spinner1 = spin({
       text: "Checking connectivity...",
       color: "cyan",
     }).start();
@@ -535,7 +553,7 @@ program
       return;
     }
 
-    const spinner2 = ora({
+    const spinner2 = spin({
       text: "Checking VPN/proxy...",
       color: "cyan",
     }).start();
@@ -543,12 +561,12 @@ program
     spinner2.stop();
     formatVpnResults(vpnResult);
 
-    const spinner3 = ora({ text: "Testing DNS...", color: "cyan" }).start();
+    const spinner3 = spin({ text: "Testing DNS...", color: "cyan" }).start();
     const dnsResult = await dnsLookup("google.com", "A");
     spinner3.stop();
     formatDnsResults(dnsResult);
 
-    const spinner4 = ora({
+    const spinner4 = spin({
       text: "Pinging google.com...",
       color: "cyan",
     }).start();
@@ -556,12 +574,12 @@ program
     spinner4.stop();
     formatPingResults(pingResult);
 
-    const spinner5 = ora({ text: "Testing latency...", color: "cyan" }).start();
+    const spinner5 = spin({ text: "Testing latency...", color: "cyan" }).start();
     const latencyResult = await latencyTest(5);
     spinner5.stop();
     formatLatencyResults(latencyResult);
 
-    const spinnerIface = ora({
+    const spinnerIface = spin({
       text: "Getting interfaces...",
       color: "cyan",
     }).start();
@@ -577,10 +595,14 @@ program
   .description("Run ALL tests including speed test")
   .action(async () => {
     _compositeMode = true;
+    if (isJsonMode()) {
+      console.log(JSON.stringify(await runDiagnostics({ speed: true }), null, 2));
+      return;
+    }
     banner();
     blank();
 
-    const spinner1 = ora({
+    const spinner1 = spin({
       text: "Checking connectivity...",
       color: "cyan",
     }).start();
@@ -594,7 +616,7 @@ program
       return;
     }
 
-    const spinner2 = ora({
+    const spinner2 = spin({
       text: "Checking VPN/proxy...",
       color: "cyan",
     }).start();
@@ -602,7 +624,7 @@ program
     spinner2.stop();
     formatVpnResults(vpnResult);
 
-    const spinnerIface = ora({
+    const spinnerIface = spin({
       text: "Getting interfaces...",
       color: "cyan",
     }).start();
@@ -610,12 +632,12 @@ program
     spinnerIface.stop();
     formatInterfaceResults(ifaceResult);
 
-    const spinner3 = ora({ text: "DNS check...", color: "cyan" }).start();
+    const spinner3 = spin({ text: "DNS check...", color: "cyan" }).start();
     const dnsResult = await comprehensiveDnsCheck("google.com");
     spinner3.stop();
     formatComprehensiveDns(dnsResult);
 
-    const spinner4 = ora({
+    const spinner4 = spin({
       text: "Testing DNS speed...",
       color: "cyan",
     }).start();
@@ -623,7 +645,7 @@ program
     spinner4.stop();
     formatDnsSpeedResults(dnsSpeedResult);
 
-    const spinner5 = ora({
+    const spinner5 = spin({
       text: "Pinging google.com...",
       color: "cyan",
     }).start();
@@ -631,12 +653,12 @@ program
     spinner5.stop();
     formatPingResults(pingResult);
 
-    const spinner6 = ora({ text: "Testing HTTP...", color: "cyan" }).start();
+    const spinner6 = spin({ text: "Testing HTTP...", color: "cyan" }).start();
     const httpResult = await httpTest("https://www.google.com");
     spinner6.stop();
     formatHttpResults(httpResult);
 
-    const spinner7 = ora({ text: "Testing latency...", color: "cyan" }).start();
+    const spinner7 = spin({ text: "Testing latency...", color: "cyan" }).start();
     const latencyResult = await latencyTest(10);
     spinner7.stop();
     formatLatencyResults(latencyResult);

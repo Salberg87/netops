@@ -1,26 +1,57 @@
 {
   "name": "netops",
-  "version": "2.1.0",
-  "description": "A lightweight CLI tool for testing internet speed, health, pings, servers, DNS and other network diagnostics",
-  "main": "index.js",
+  "version": "2.2.0",
+  "description": "Network diagnostics CLI, Claude Code skills and mod: connectivity, speed, DNS, TLS, ports, latency, VPN and Wi-Fi",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "claude-plugin",
+    "cli",
+    "diagnostics",
+    "dns",
+    "mcp",
+    "network",
+    "ping",
+    "skills",
+    "speed-test",
+    "tls",
+    "troubleshooting"
+  ],
+  "homepage": "https://github.com/Salberg87/netops#readme",
+  "bugs": {
+    "url": "https://github.com/Salberg87/netops/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Salberg87/netops.git"
+  },
+  "license": "MIT",
+  "author": "Salberg87 (https://github.com/Salberg87)",
   "type": "module",
+  "main": "index.js",
   "bin": {
     "netops": "./index.js"
   },
+  "files": [
+    "index.js",
+    "lib/",
+    "scripts/",
+    "skills/",
+    "hooks/",
+    "types/",
+    ".claude-plugin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node index.js",
-    "test": "node index.js --help"
+    "test": "node --test",
+    "test:mod": "claude plugin test .",
+    "validate": "claude plugin validate ."
   },
-  "keywords": [
-    "network",
-    "ping",
-    "dns",
-    "speed-test",
-    "cli",
-    "diagnostics"
-  ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "chalk": "^5.3.0",
     "commander": "^11.1.0",

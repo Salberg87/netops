@@ -1,0 +1,12 @@
+{
+  "name": "netops",
+  "owner": { "name": "Salberg87", "url": "https://github.com/Salberg87" },
+  "metadata": { "description": "Network diagnostics skills and mod for Claude Code." },
+  "plugins": [
+    {
+      "name": "netops",
+      "source": "./",
+      "description": "Troubleshoot connectivity, DNS, TLS, latency and speed from inside Claude Code."
+    }
+  ]
+}
