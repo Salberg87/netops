@@ -1,0 +1,19 @@
+name: Feature request
+description: A new check, skill, or mod feature
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Proposed solution
+  - type: dropdown
+    id: part
+    attributes:
+      label: Where would it live?
+      options: [CLI command, Claude skill, Claude mod, Not sure]

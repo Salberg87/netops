@@ -1,0 +1,10 @@
+#!/bin/sh
+# Bootstrap wrapper used by the Claude Code plugin (skills + mod).
+# Installs runtime dependencies on first use, then runs the netops CLI.
+set -e
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ ! -f "$ROOT/node_modules/commander/package.json" ]; then
+  echo "netops: installing dependencies (first run)..." >&2
+  (cd "$ROOT" && npm install --omit=dev --no-audit --no-fund --silent >&2)
+fi
+exec node "$ROOT/index.js" "$@"

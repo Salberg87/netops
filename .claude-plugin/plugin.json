@@ -1,0 +1,23 @@
+{
+  "name": "netops",
+  "version": "2.2.0",
+  "description": "Network diagnostics for Claude: skills to troubleshoot connectivity, DNS, TLS and latency, plus a mod with netops tools, a /netops health pane and a status line.",
+  "author": {
+    "name": "Salberg87",
+    "url": "https://github.com/Salberg87"
+  },
+  "homepage": "https://github.com/Salberg87/netops",
+  "repository": "https://github.com/Salberg87/netops",
+  "license": "MIT",
+  "keywords": [
+    "network",
+    "diagnostics",
+    "dns",
+    "tls",
+    "ping",
+    "latency",
+    "troubleshooting"
+  ],
+  "types": "./types/index.d.ts",
+  "icon": "./.claude-plugin/icon.png"
+}

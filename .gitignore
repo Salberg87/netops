@@ -7,3 +7,7 @@ npm-debug.log*
 coverage/
 dist/
 build/
+
+# Written by Claude Code when a mod loads
+.claude-plugin/types/
+.mcpb-cache/
