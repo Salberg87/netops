@@ -4,7 +4,9 @@ import { Command } from "commander";
 import chalk from "chalk";
 import ora from "ora";
 import { isJsonMode } from "./lib/ui.js";
-import { runDiagnostics } from "./lib/diagnose.js";
+import { runDiagnostics, findIssues, overallStatus } from "./lib/diagnose.js";
+import { verdict } from "./lib/verdict.js";
+import { colors } from "./lib/theme.js";
 import { createRequire } from "module";
 import { execSync, spawn } from "child_process";
 import { ping } from "./lib/ping.js";
@@ -54,6 +56,7 @@ import {
   status,
   kv,
   blank,
+  card,
   setSuppressOutput,
 } from "./lib/ui.js";
 
@@ -63,7 +66,33 @@ const pkg = require("./package.json");
 const program = new Command();
 
 // Spinners go silent in --json mode so Claude (and scripts) get clean output.
-const spin = (opts) => ora({ ...opts, isSilent: isJsonMode() });
+// A calm three-dot pulse in the accent color instead of a busy spinner.
+const PULSE = {
+  interval: 140,
+  frames: ["∙∙∙", "●∙∙", "∙●∙", "∙∙●", "∙∙∙"].map((f) => colors.primary(f)),
+};
+const spin = (opts) =>
+  ora({
+    ...opts,
+    text: colors.muted(opts.text),
+    spinner: PULSE,
+    indent: 2,
+    isSilent: isJsonMode(),
+  });
+
+/** Print the plain-language verdict card for a set of results. */
+function verdictCard(results) {
+  const issues = findIssues(results);
+  const v = verdict({ ...results, issues, status: overallStatus(issues) });
+  const body = [v.sentence];
+  if (v.notes.length) {
+    body.push("");
+    for (const n of v.notes.slice(0, 4)) {
+      body.push({ text: n.hint ? `${n.text}. ${n.hint}` : n.text });
+    }
+  }
+  card({ tone: v.tone, headline: v.headline, body });
+}
 
 program
   .name("netops")
@@ -245,7 +274,11 @@ program
         spinner.stop();
         outputResult({ upload }, formatSpeedTestResults);
       } else {
-        const results = await comprehensiveSpeedTest();
+        const spinner = spin({ text: "Measuring speed..." }).start();
+        const results = await comprehensiveSpeedTest({
+          onProgress: (t) => (spinner.text = colors.muted(t)),
+        });
+        spinner.stop();
         outputResult(results, formatSpeedTestResults);
       }
     } catch (error) {
@@ -537,7 +570,7 @@ program
       console.log(JSON.stringify(await runDiagnostics({ speed: false }), null, 2));
       return;
     }
-    banner();
+    banner("quick check");
 
     const spinner1 = spin({
       text: "Checking connectivity...",
@@ -548,7 +581,7 @@ program
     formatConnectivityResults(connectivity);
 
     if (!connectivity.connected) {
-      console.log("\nInternet connectivity issues detected. Stopping.");
+      verdictCard({ connectivity });
       footer();
       return;
     }
@@ -587,6 +620,13 @@ program
     spinnerIface.stop();
     formatInterfaceResults(ifaceResult);
 
+    verdictCard({
+      connectivity,
+      vpn: vpnResult,
+      dns: dnsResult,
+      ping: pingResult,
+      latency: latencyResult,
+    });
     footer();
   });
 
@@ -599,8 +639,7 @@ program
       console.log(JSON.stringify(await runDiagnostics({ speed: true }), null, 2));
       return;
     }
-    banner();
-    blank();
+    banner("full check, about a minute");
 
     const spinner1 = spin({
       text: "Checking connectivity...",
@@ -611,7 +650,7 @@ program
     formatConnectivityResults(connectivity);
 
     if (!connectivity.connected) {
-      console.log("\nInternet connectivity issues detected. Stopping.");
+      verdictCard({ connectivity });
       footer();
       return;
     }
@@ -663,48 +702,23 @@ program
     spinner7.stop();
     formatLatencyResults(latencyResult);
 
-    console.log("\nRunning speed test (20-30s)...\n");
-    const speedResults = await comprehensiveSpeedTest();
+    
+    const speedSpinner = spin({ text: "Measuring speed..." }).start();
+    const speedResults = await comprehensiveSpeedTest({
+      onProgress: (t) => (speedSpinner.text = colors.muted(t)),
+    });
+    speedSpinner.stop();
     formatSpeedTestResults(speedResults);
 
-    // Summary
-    section("Summary");
-    const connIcon = connectivity.connected ? "ok" : "fail";
-    const vpnIcon = vpnResult.vpnDetected ? "warn" : "ok";
-    const dnsIcon = dnsResult.A?.success ? "ok" : "fail";
-    const pingIcon = pingResult.success ? "ok" : "fail";
-    const httpIcon = httpResult.success ? "ok" : "fail";
-
-    status(
-      connIcon,
-      `Connectivity: ${connectivity.connected ? "Connected" : "Disconnected"}`,
-    );
-    status(
-      vpnIcon,
-      `VPN/Proxy: ${vpnResult.vpnDetected ? vpnResult.vpns.length + " detected" : "None"}`,
-    );
-    status(dnsIcon, `DNS: ${dnsResult.A?.success ? "Working" : "Failed"}`);
-    status(
-      pingIcon,
-      `Ping: ${pingResult.success ? pingResult.avgTime + "ms" : "Failed"}`,
-    );
-    status(
-      httpIcon,
-      `HTTP: ${httpResult.success ? httpResult.statusCode : "Failed"}`,
-    );
-
-    if (latencyResult.success) {
-      status(
-        "ok",
-        `Latency: ${latencyResult.avgLatency}ms avg, jitter: ${latencyResult.jitter}ms`,
-      );
-    }
-    if (speedResults.download?.success) {
-      status("ok", `Download: ${speedResults.download.speedMbps} Mbps`);
-    }
-    if (speedResults.upload?.success) {
-      status("ok", `Upload: ${speedResults.upload.speedMbps} Mbps`);
-    }
+    verdictCard({
+      connectivity,
+      vpn: vpnResult,
+      dns: dnsResult.A,
+      dnsSpeed: dnsSpeedResult,
+      ping: pingResult,
+      latency: latencyResult,
+      speed: speedResults,
+    });
 
     footer();
   });

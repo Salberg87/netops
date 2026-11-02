@@ -2,6 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { RunState, Summary } from '../types'
+import { verdict } from '../lib/verdict.js'
 
 /**
  * netops mod for Claude Code.
@@ -15,7 +16,11 @@ import type { RunState, Summary } from '../types'
  */
 
 const PANE = 'netops-health'
-const last = atom({ plugin: 'netops', key: 'last' } as const, null, { shape: 'summary-1' })
+
+// "Calm signal" accent (docs/brand). Status colors use the host theme's keys.
+const TIDE = '#3AA391'
+const SPARK = '▁▂▃▄▅▆▇█'
+const last = atom({ plugin: 'netops', key: 'last' } as const, null, { shape: 'summary-2' })
 const run = atom({ plugin: 'netops', key: 'run' } as const, { isRunning: false }, { shape: 'run-1' })
 
 // Same rule as lib/validate.js: hostnames and IP literals, no leading "-".
@@ -116,17 +121,27 @@ export function summarize(r: any): Summary {
     downMbps: r?.speed?.download?.success ? num(r.speed.download.speedMbps) : undefined,
     upMbps: r?.speed?.upload?.success ? num(r.speed.upload.speedMbps) : undefined,
     vpn: vpns.length ? vpns.map(v => v.name || v.interface).filter(Boolean).join(', ') : undefined,
+    samples: Array.isArray(r?.latency?.latencies) ? r.latency.latencies.slice(-24).map(Number) : undefined,
     issues: Array.isArray(r?.issues) ? r.issues : [],
   }
 }
 
+/** ▂▃▂▅▂▃ from samples, scaled to their own range. */
+export function sparkline(values: readonly number[] | undefined): string {
+  const nums = (values ?? []).filter(Number.isFinite)
+  if (nums.length < 2) return ''
+  const min = Math.min(...nums)
+  const span = Math.max(...nums) - min || 1
+  return nums.map(v => SPARK[Math.round(((v - min) / span) * (SPARK.length - 1))]).join('')
+}
+
 const statusText = (s: Summary): string => {
+  if (!s.connected) return '∿ offline'
   const mark = s.status === 'ok' ? '✓' : s.status === 'warn' ? '!' : '✗'
-  if (!s.connected) return `net ${mark} offline`
-  const parts = [`net ${mark}`]
-  if (s.pingMs !== undefined) parts.push(`${s.pingMs}ms`)
-  if (s.issues.length) parts.push(`${s.issues.length} issue${s.issues.length > 1 ? 's' : ''}`)
-  return parts.join(' ')
+  const parts = [`∿ ${mark}`]
+  if (s.pingMs !== undefined) parts.push(`${Math.round(s.pingMs)} ms`)
+  if (s.issues.length) parts.push(`${s.issues.length} to look at`)
+  return parts.join(' · ')
 }
 
 async function cli($: EngineInterface, argv: string[], timeoutMs = 60_000) {
@@ -138,7 +153,7 @@ async function diagnose($: EngineInterface, speed: boolean): Promise<{ json?: un
   const state: RunState = await read($, run)
   if (state.isRunning) return { error: 'A netops diagnostics run is already in progress.' }
   await update($, run, () => ({ isRunning: true }))
-  $.ui.status('net … checking')
+  $.ui.status('∿ checking…')
   try {
     const res = await cli($, ['report', ...(speed ? ['--speed'] : [])], speed ? 180_000 : 90_000)
     const json = JSON.parse(res.stdout)
@@ -150,7 +165,7 @@ async function diagnose($: EngineInterface, speed: boolean): Promise<{ json?: un
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err)
     await update($, run, () => ({ isRunning: false, error }))
-    $.ui.status('net ? error')
+    $.ui.status('∿ check failed')
     return { error }
   }
 }
@@ -232,54 +247,84 @@ export const register: Register = on => {
     const s: Summary | null = await read($, last)
     const r: RunState = await read($, run)
 
-    const color = (st: Summary['status']) => (st === 'ok' ? 'success' : st === 'warn' ? 'warning' : 'error')
-    const row = (label: string, value: string) => (
+    const toneColor = (t: Summary['status']) => (t === 'ok' ? 'success' : t === 'warn' ? 'warning' : 'error')
+    const mark = (t: Summary['status']) => (t === 'ok' ? '✓' : t === 'warn' ? '!' : '✗')
+    const metric = (label: string, value: string, extra?: string) => (
       <Text>
-        <Text dimColor>{label.padEnd(9)}</Text>
-        {value}
+        <Text dimColor>{label.padEnd(8)}</Text>
+        {value.padStart(9)}
+        {extra && <Text color={TIDE}>{'   ' + extra}</Text>}
       </Text>
     )
 
+    const actions = (
+      <Box flexDirection="row" gap={2}>
+        <Button key="check" variant="primary" onPress={() => void diagnose($, false)}>
+          {r.isRunning ? 'Checking…' : s ? 'Check again' : 'Check now'}
+        </Button>
+        <Button key="speed" onPress={() => void diagnose($, true)}>
+          Test speed
+        </Button>
+      </Box>
+    )
+
+    // Nothing measured yet: one friendly line and the button.
+    if (!s) {
+      return (
+        <Box flexDirection="column" gap={1}>
+          <Text>
+            <Text color={TIDE} bold>∿ </Text>
+            <Text bold>{r.isRunning ? 'Checking your network…' : 'How is the network doing?'}</Text>
+          </Text>
+          <Text dimColor>
+            {r.isRunning
+              ? 'Connectivity, DNS, ping and latency. About ten seconds.'
+              : 'A quick check takes about ten seconds and stays on this machine.'}
+          </Text>
+          {r.error && <Text color="error">The last check failed: {r.error}</Text>}
+          {actions}
+        </Box>
+      )
+    }
+
+    const v = verdict(s)
+    const time = new Date(s.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
     return (
       <Box flexDirection="column" gap={1}>
-        <Box flexDirection="row" gap={2}>
-          <Button key="refresh" variant="primary" onPress={() => void diagnose($, false)}>
-            {r.isRunning ? 'Checking…' : 'Refresh'}
-          </Button>
-          <Button key="speed" onPress={() => void diagnose($, true)}>
-            With speed test
-          </Button>
+        <Box flexDirection="column">
+          <Text bold color={toneColor(v.tone)}>
+            {mark(v.tone)} {v.headline}
+          </Text>
+          <Text>{v.sentence}</Text>
+          <Text dimColor>{r.isRunning ? 'Checking again…' : `Checked at ${time}`}</Text>
         </Box>
 
-        {r.error && <Text color="error">Last run failed: {r.error}</Text>}
-        {!s && !r.isRunning && <Text dimColor>No results yet. Press Refresh.</Text>}
-
-        {s && (
+        {s.connected && (
           <Box flexDirection="column">
-            <Text bold color={color(s.status)}>
-              {s.status === 'ok' ? '✓ Healthy' : s.status === 'warn' ? '! Degraded' : '✗ Problem'}
-              <Text dimColor>  {new Date(s.at).toLocaleTimeString()}</Text>
-            </Text>
-            {row('Internet', s.connected ? 'connected' : 'offline')}
-            {s.pingMs !== undefined && row('Ping', `${s.pingMs} ms`)}
-            {s.jitterMs !== undefined && row('Jitter', `${s.jitterMs} ms`)}
-            {s.dnsMs !== undefined && row('DNS', `${s.dnsMs} ms`)}
-            {s.downMbps !== undefined && row('Down', `${s.downMbps} Mbps`)}
-            {s.upMbps !== undefined && row('Up', `${s.upMbps} Mbps`)}
-            {s.vpn && row('VPN', s.vpn)}
+            {s.pingMs !== undefined && metric('Ping', `${Math.round(s.pingMs)} ms`, sparkline(s.samples))}
+            {s.jitterMs !== undefined && metric('Jitter', `${Math.round(s.jitterMs)} ms`)}
+            {s.dnsMs !== undefined && metric('DNS', `${Math.round(s.dnsMs)} ms`)}
+            {s.downMbps !== undefined && metric('Down', `${Math.round(s.downMbps)} Mbps`)}
+            {s.upMbps !== undefined && metric('Up', `${Math.round(s.upMbps)} Mbps`)}
+            {s.vpn && metric('VPN', s.vpn)}
           </Box>
         )}
 
-        {s && s.issues.length > 0 && (
+        {v.notes.length > 0 && (
           <Box flexDirection="column">
-            <Text bold>Issues</Text>
-            {s.issues.map(i => (
-              <Text color={i.severity === 'fail' ? 'error' : 'warning'}>
-                {i.severity === 'fail' ? '✗' : '!'} {i.message}
-              </Text>
+            <Text bold>Worth a look</Text>
+            {v.notes.map(n => (
+              <Box flexDirection="column">
+                <Text color="warning">! <Text color="text">{n.text}</Text></Text>
+                {n.hint && <Text dimColor>{'  ' + n.hint}</Text>}
+              </Box>
             ))}
           </Box>
         )}
+
+        {r.error && <Text color="error">The last check failed: {r.error}</Text>}
+        {actions}
       </Box>
     )
   })

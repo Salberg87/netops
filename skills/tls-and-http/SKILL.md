@@ -41,3 +41,5 @@ The mod only allows `GET`, `HEAD` and `OPTIONS` — netops is for checking, not 
 ## Reporting
 
 Lead with the answer ("Certificate is valid for 63 more days, issued by Let's Encrypt, covers example.com and www.example.com"). Then list anything that needs action, with the fix. For renewals, give the exact date.
+
+Keep the voice calm and specific: the verdict first, numbers people can check, one next step. No exclamation marks or emoji.

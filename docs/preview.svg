@@ -1,72 +1,157 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="620" height="880" viewBox="0 0 620 880">
-  <style>
-    .bg { fill: #1a1b26; }
-    .primary { fill: #5f9ea0; }
-    .success { fill: #6b9e6b; }
-    .warning { fill: #c8a54e; }
-    .error { fill: #b56b6b; }
-    .muted { fill: #636c83; }
-    .label { fill: #c0caf5; }
-    .value { fill: #ffffff; font-weight: bold; }
-    text { font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace; font-size: 13px; }
-    .small { font-size: 11px; }
-  </style>
-
-  <!-- Background -->
-  <rect class="bg" width="620" height="880" rx="8"/>
-
-  <!-- Window dots -->
-  <circle cx="24" cy="18" r="6" fill="#ff5f57"/>
-  <circle cx="44" cy="18" r="6" fill="#febc2e"/>
-  <circle cx="64" cy="18" r="6" fill="#28c840"/>
-
-  <!-- Banner -->
-  <text x="24" y="55" class="primary">─── netops v2.0 ──────────────────────────────────</text>
-
-  <!-- Connectivity -->
-  <text x="24" y="90" class="primary">─── Connectivity ─────────────────────────────────</text>
-  <text x="36" y="115" class="success">✓</text><text x="54" y="115" class="label">Internet is reachable</text>
-  <text x="54" y="135" class="muted">Success rate: 100.0%</text>
-  <text x="36" y="162" class="label">google.com</text><text x="240" y="162" class="success">189ms</text>
-  <text x="36" y="182" class="label">cloudflare.com</text><text x="240" y="182" class="warning">339ms</text>
-  <text x="36" y="202" class="label">amazon.com</text><text x="240" y="202" class="warning">310ms</text>
-
-  <!-- VPN -->
-  <text x="24" y="237" class="primary">─── VPN / Proxy ──────────────────────────────────</text>
-  <text x="36" y="262" class="success">✓</text><text x="54" y="262" class="label">Traffic via</text><text x="144" y="262" class="value">en0</text><text x="178" y="262" class="muted">→ 10.0.0.138</text>
-  <text x="36" y="282" class="warning">⚠</text><text x="54" y="282" class="label">Proton VPN</text><text x="168" y="282" class="muted">(process running)</text>
-
-  <!-- Ping -->
-  <text x="24" y="317" class="primary">─── Ping ─────────────────────────────────────────</text>
-  <text x="36" y="342" class="success">✓</text><text x="54" y="342" class="label">google.com</text>
-  <text x="54" y="362" class="label">Packets</text><text x="150" y="362" class="value">4/4</text><text x="188" y="362" class="muted">(0% loss)</text>
-  <text x="54" y="382" class="label">Latency</text><text x="150" y="382" class="value">19.8ms</text><text x="220" y="382" class="muted">avg  min=18.7  max=22.0</text>
-  <text x="54" y="402" class="label">Quality</text><text x="150" y="402" class="success">Excellent</text>
-
-  <!-- SSL Certificate -->
-  <text x="24" y="437" class="primary">─── SSL Certificate ──────────────────────────────</text>
-  <text x="36" y="462" class="success">✓</text><text x="54" y="462" class="label">pifre.no</text><text x="140" y="462" class="muted">— valid</text>
-  <text x="54" y="482" class="label">Subject</text><text x="150" y="482" class="value">CN=pifre.no</text>
-  <text x="54" y="502" class="label">Issuer</text><text x="150" y="502" class="muted">Let's Encrypt (R13)</text>
-  <text x="54" y="522" class="label">Expires</text><text x="150" y="522" class="value">2026-06-29</text><text x="280" y="522" class="success">[84 days]</text>
-  <text x="54" y="542" class="label">TLS</text><text x="150" y="542" class="value">v1.3</text><text x="190" y="542" class="muted">/ TLS_AES_128_GCM_SHA256</text>
-
-  <!-- Port Scan -->
-  <text x="24" y="577" class="primary">─── Port Scan ────────────────────────────────────</text>
-  <text x="36" y="602" class="label">pifre.no</text><text x="140" y="602" class="muted">21 ports scanned in 6.0s</text>
-  <text x="36" y="622" class="success">3 open</text><text x="108" y="622" class="muted">· 0 closed · 18 filtered</text>
-  <text x="36" y="649" class="muted small">PORT</text><text x="110" y="649" class="muted small">SERVICE</text><text x="240" y="649" class="muted small">TIME</text>
-  <text x="36" y="669" class="success">80</text><text x="110" y="669" class="success">HTTP</text><text x="240" y="669" class="success">38ms</text>
-  <text x="36" y="689" class="success">443</text><text x="110" y="689" class="success">HTTPS</text><text x="240" y="689" class="success">37ms</text>
-  <text x="36" y="709" class="success">21</text><text x="110" y="709" class="success">FTP</text><text x="240" y="709" class="success">12ms</text>
-
-  <!-- Speed -->
-  <text x="24" y="744" class="primary">─── Speed ────────────────────────────────────────</text>
-  <text x="54" y="769" class="label">Download</text><text x="162" y="769" class="value">240 Mbps</text><text x="270" y="769" class="muted">(30.0 MB/s)</text>
-  <text x="54" y="789" class="label">Upload</text><text x="162" y="789" class="value">26.4 Mbps</text><text x="270" y="789" class="muted">(3.3 MB/s)</text>
-  <text x="54" y="809" class="label">Latency</text><text x="162" y="809" class="value">93ms</text><text x="210" y="809" class="muted">avg</text>
-  <text x="54" y="829" class="label">Jitter</text><text x="162" y="829" class="success">6.7ms</text>
-
-  <!-- Footer -->
-  <text x="24" y="864" class="muted">─── done · 2026-04-07 10:32 ──────────────────────</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="476" height="828" viewBox="0 0 476 828" role="img" aria-label="netops diagnose output">
+<rect x="0.5" y="0.5" width="475" height="827" rx="14" fill="#151816" stroke="#262B28"/>
+<circle cx="22" cy="20" r="5" fill="#353B37"/>
+<circle cx="38" cy="20" r="5" fill="#353B37"/>
+<circle cx="54" cy="20" r="5" fill="#353B37"/>
+<text x="238.0" y="24" text-anchor="middle" fill="#7F8984" font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace" font-size="12">netops diagnose</text>
+<g font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace" font-size="13" xml:space="preserve">
+<text x="35.6" y="71" fill="#3AA391" font-weight="600">∿</text>
+<text x="51.2 59.0 66.8 74.6 82.4 90.2" y="71" fill="#3AA391" font-weight="600">netops</text>
+<text x="105.8 113.6 121.4 129.2 137.0" y="71" fill="#8A938F">2.2.0</text>
+<text x="160.4 168.2 176.0 183.8 191.6" y="71" fill="#8A938F">quick</text>
+<text x="207.2 215.0 222.8 230.6 238.4" y="71" fill="#8A938F">check</text>
+<text x="35.6 43.4 51.2 59.0 66.8 74.6 82.4 90.2 98.0 105.8 113.6 121.4" y="109" fill="#3AA391" font-weight="600">Connectivity</text>
+<text x="51.2" y="128" fill="#5DAA72">✓</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6 121.4" y="128" fill="#E7ECE9">Internet</text>
+<text x="137.0 144.8" y="128" fill="#E7ECE9">is</text>
+<text x="160.4 168.2 176.0 183.8 191.6 199.4 207.2 215.0 222.8" y="128" fill="#E7ECE9">reachable</text>
+<text x="246.2" y="128" fill="#8A938F">3</text>
+<text x="261.8 269.6" y="128" fill="#8A938F">of</text>
+<text x="285.2" y="128" fill="#8A938F">3</text>
+<text x="300.8 308.6 316.4 324.2 332.0" y="128" fill="#8A938F">sites</text>
+<text x="347.6 355.4 363.2 371.0 378.8 386.6 394.4 402.2" y="128" fill="#8A938F">answered</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6 121.4 129.2 137.0" y="147" fill="#8A938F">google.com</text>
+<text x="191.6 199.4" y="147" fill="#5DAA72">21</text>
+<text x="215.0 222.8" y="147" fill="#5DAA72">ms</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6 121.4 129.2 137.0 144.8 152.6 160.4 168.2" y="166" fill="#8A938F">cloudflare.com</text>
+<text x="191.6 199.4" y="166" fill="#5DAA72">17</text>
+<text x="215.0 222.8" y="166" fill="#5DAA72">ms</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6 121.4 129.2 137.0" y="185" fill="#8A938F">amazon.com</text>
+<text x="191.6 199.4" y="185" fill="#D49A2E">64</text>
+<text x="215.0 222.8" y="185" fill="#D49A2E">ms</text>
+<text x="35.6 43.4 51.2" y="223" fill="#3AA391" font-weight="600">VPN</text>
+<text x="66.8" y="223" fill="#3AA391" font-weight="600">/</text>
+<text x="82.4 90.2 98.0 105.8 113.6" y="223" fill="#3AA391" font-weight="600">Proxy</text>
+<text x="51.2" y="242" fill="#5DAA72">✓</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6" y="242" fill="#E7ECE9">Traffic</text>
+<text x="129.2 137.0 144.8" y="242" fill="#E7ECE9">via</text>
+<text x="160.4 168.2 176.0" y="242" fill="#E7ECE9">en0</text>
+<text x="191.6" y="242" fill="#8A938F">→</text>
+<text x="207.2 215.0 222.8 230.6 238.4 246.2 254.0 261.8 269.6 277.4 285.2" y="242" fill="#8A938F">192.168.1.1</text>
+<text x="51.2" y="261" fill="#5DAA72">✓</text>
+<text x="66.8 74.6" y="261" fill="#E7ECE9">No</text>
+<text x="90.2 98.0 105.8" y="261" fill="#E7ECE9">VPN</text>
+<text x="121.4 129.2" y="261" fill="#E7ECE9">or</text>
+<text x="144.8 152.6 160.4 168.2 176.0" y="261" fill="#E7ECE9">proxy</text>
+<text x="35.6 43.4 51.2" y="299" fill="#3AA391" font-weight="600">DNS</text>
+<text x="51.2" y="318" fill="#5DAA72">✓</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6 121.4 129.2 137.0" y="318" fill="#E7ECE9">google.com</text>
+<text x="160.4 168.2 176.0 183.8 191.6 199.4 207.2 215.0" y="318" fill="#8A938F">resolved</text>
+<text x="230.6 238.4" y="318" fill="#8A938F">in</text>
+<text x="254.0" y="318" fill="#8A938F">9</text>
+<text x="269.6 277.4" y="318" fill="#8A938F">ms</text>
+<text x="66.8" y="337" fill="#8A938F">A</text>
+<text x="129.2 137.0 144.8 152.6 160.4 168.2 176.0 183.8 191.6 199.4 207.2 215.0 222.8" y="337" fill="#E7ECE9">142.250.74.46</text>
+<text x="35.6 43.4 51.2 59.0" y="375" fill="#3AA391" font-weight="600">Ping</text>
+<text x="51.2" y="394" fill="#5DAA72">✓</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6 121.4 129.2 137.0" y="394" fill="#E7ECE9">google.com</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6" y="413" fill="#8A938F">Packets</text>
+<text x="137.0 144.8 152.6" y="413" fill="#E7ECE9">4/4</text>
+<text x="176.0 183.8" y="413" fill="#8A938F">0%</text>
+<text x="199.4 207.2 215.0 222.8" y="413" fill="#8A938F">loss</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6" y="432" fill="#8A938F">Latency</text>
+<text x="137.0 144.8 152.6 160.4" y="432" fill="#5DAA72">19.6</text>
+<text x="176.0 183.8" y="432" fill="#5DAA72">ms</text>
+<text x="207.2 215.0 222.8 230.6 238.4" y="432" fill="#8A938F">range</text>
+<text x="254.0 261.8 269.6 277.4 285.2 293.0 300.8" y="432" fill="#8A938F">17.1–23</text>
+<text x="316.4 324.2" y="432" fill="#8A938F">ms</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6" y="451" fill="#8A938F">Quality</text>
+<text x="137.0 144.8 152.6 160.4 168.2 176.0 183.8 191.6 199.4" y="451" fill="#5DAA72">Excellent</text>
+<text x="35.6 43.4 51.2 59.0 66.8 74.6 82.4" y="489" fill="#3AA391" font-weight="600">Latency</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6" y="508" fill="#8A938F">Average</text>
+<text x="137.0 144.8 152.6 160.4" y="508" fill="#5DAA72">27.8</text>
+<text x="176.0 183.8" y="508" fill="#5DAA72">ms</text>
+<rect x="216.0" y="507.5" width="5.8" height="3.5" rx="1.5" fill="#3AA391"/>
+<rect x="223.8" y="506.0" width="5.8" height="5.0" rx="1.5" fill="#3AA391"/>
+<rect x="231.6" y="507.5" width="5.8" height="3.5" rx="1.5" fill="#3AA391"/>
+<rect x="239.4" y="498.5" width="5.8" height="12.5" rx="1.5" fill="#3AA391"/>
+<rect x="247.2" y="507.5" width="5.8" height="3.5" rx="1.5" fill="#3AA391"/>
+<rect x="255.0" y="506.0" width="5.8" height="5.0" rx="1.5" fill="#3AA391"/>
+<rect x="262.8" y="497.0" width="5.8" height="14.0" rx="1.5" fill="#3AA391"/>
+<rect x="270.6" y="507.5" width="5.8" height="3.5" rx="1.5" fill="#3AA391"/>
+<rect x="278.4" y="507.5" width="5.8" height="3.5" rx="1.5" fill="#3AA391"/>
+<rect x="286.2" y="501.5" width="5.8" height="9.5" rx="1.5" fill="#3AA391"/>
+<rect x="294.0" y="507.5" width="5.8" height="3.5" rx="1.5" fill="#3AA391"/>
+<rect x="301.8" y="506.0" width="5.8" height="5.0" rx="1.5" fill="#3AA391"/>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6" y="527" fill="#8A938F">Min/Max</text>
+<text x="137.0 144.8" y="527" fill="#E7ECE9">17</text>
+<text x="160.4 168.2" y="527" fill="#E7ECE9">ms</text>
+<text x="183.8" y="527" fill="#E7ECE9">/</text>
+<text x="199.4 207.2" y="527" fill="#E7ECE9">61</text>
+<text x="222.8 230.6" y="527" fill="#E7ECE9">ms</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8" y="546" fill="#8A938F">Jitter</text>
+<text x="137.0 144.8 152.6 160.4" y="546" fill="#D49A2E">18.4</text>
+<text x="176.0 183.8" y="546" fill="#D49A2E">ms</text>
+<text x="66.8 74.6 82.4" y="565" fill="#8A938F">Std</text>
+<text x="98.0 105.8 113.6" y="565" fill="#8A938F">Dev</text>
+<text x="137.0 144.8 152.6 160.4" y="565" fill="#E7ECE9">14.9</text>
+<text x="176.0 183.8" y="565" fill="#E7ECE9">ms</text>
+<text x="66.8 74.6 82.4 90.2 98.0" y="584" fill="#8A938F">Tests</text>
+<text x="137.0 144.8" y="584" fill="#E7ECE9">12</text>
+<text x="35.6 43.4 51.2 59.0 66.8 74.6 82.4 90.2 98.0 105.8 113.6 121.4 129.2 137.0 144.8 152.6 160.4 168.2 176.0 183.8 191.6 199.4 207.2 215.0 222.8 230.6 238.4 246.2 254.0 261.8 269.6 277.4 285.2 293.0 300.8 308.6 316.4 324.2 332.0 339.8 347.6 355.4 363.2 371.0 378.8 386.6 394.4 402.2 410.0 417.8 425.6 433.4" y="622" fill="#8A938F">╭──────────────────────────────────────────────────╮</text>
+<text x="35.6" y="641" fill="#8A938F">│</text>
+<text x="51.2" y="641" fill="#D49A2E">!</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8" y="641" fill="#E7ECE9" font-weight="600">Mostly</text>
+<text x="121.4 129.2 137.0 144.8" y="641" fill="#E7ECE9" font-weight="600">fine</text>
+<text x="433.4" y="641" fill="#8A938F">│</text>
+<text x="35.6" y="660" fill="#8A938F">│</text>
+<text x="66.8 74.6" y="660" fill="#E7ECE9">20</text>
+<text x="90.2 98.0" y="660" fill="#E7ECE9">ms</text>
+<text x="113.6 121.4" y="660" fill="#E7ECE9">to</text>
+<text x="137.0 144.8 152.6" y="660" fill="#E7ECE9">the</text>
+<text x="168.2 176.0 183.8 191.6 199.4 207.2 215.0 222.8 230.6" y="660" fill="#E7ECE9">internet,</text>
+<text x="246.2 254.0 261.8" y="660" fill="#E7ECE9">DNS</text>
+<text x="277.4 285.2 293.0 300.8 308.6 316.4 324.2" y="660" fill="#E7ECE9">answers</text>
+<text x="339.8 347.6" y="660" fill="#E7ECE9">in</text>
+<text x="363.2" y="660" fill="#E7ECE9">9</text>
+<text x="378.8 386.6" y="660" fill="#E7ECE9">ms</text>
+<text x="402.2 410.0 417.8" y="660" fill="#E7ECE9">and</text>
+<text x="433.4" y="660" fill="#8A938F">│</text>
+<text x="35.6" y="679" fill="#8A938F">│</text>
+<text x="66.8 74.6" y="679" fill="#E7ECE9">no</text>
+<text x="90.2 98.0 105.8" y="679" fill="#E7ECE9">VPN</text>
+<text x="121.4 129.2" y="679" fill="#E7ECE9">in</text>
+<text x="144.8 152.6 160.4" y="679" fill="#E7ECE9">the</text>
+<text x="176.0 183.8 191.6 199.4" y="679" fill="#E7ECE9">way.</text>
+<text x="433.4" y="679" fill="#8A938F">│</text>
+<text x="35.6" y="698" fill="#8A938F">│</text>
+<text x="433.4" y="698" fill="#8A938F">│</text>
+<text x="35.6" y="717" fill="#8A938F">│</text>
+<text x="51.2" y="717" fill="#D49A2E">!</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6" y="717" fill="#E7ECE9">Latency</text>
+<text x="129.2 137.0 144.8 152.6 160.4 168.2" y="717" fill="#E7ECE9">spikes</text>
+<text x="183.8 191.6" y="717" fill="#E7ECE9">up</text>
+<text x="207.2 215.0" y="717" fill="#E7ECE9">to</text>
+<text x="230.6 238.4" y="717" fill="#E7ECE9">61</text>
+<text x="254.0 261.8 269.6" y="717" fill="#E7ECE9">ms.</text>
+<text x="285.2" y="717" fill="#E7ECE9">A</text>
+<text x="300.8 308.6 316.4 324.2 332.0 339.8" y="717" fill="#E7ECE9">cable,</text>
+<text x="355.4 363.2" y="717" fill="#E7ECE9">or</text>
+<text x="433.4" y="717" fill="#8A938F">│</text>
+<text x="35.6" y="736" fill="#8A938F">│</text>
+<text x="66.8 74.6 82.4 90.2 98.0 105.8 113.6" y="736" fill="#E7ECE9">sitting</text>
+<text x="129.2 137.0 144.8 152.6 160.4 168.2" y="736" fill="#E7ECE9">closer</text>
+<text x="183.8 191.6" y="736" fill="#E7ECE9">to</text>
+<text x="207.2 215.0 222.8" y="736" fill="#E7ECE9">the</text>
+<text x="238.4 246.2 254.0 261.8 269.6 277.4 285.2" y="736" fill="#E7ECE9">router,</text>
+<text x="300.8 308.6 316.4 324.2 332.0 339.8 347.6" y="736" fill="#E7ECE9">usually</text>
+<text x="363.2 371.0 378.8 386.6 394.4 402.2" y="736" fill="#E7ECE9">helps.</text>
+<text x="433.4" y="736" fill="#8A938F">│</text>
+<text x="35.6 43.4 51.2 59.0 66.8 74.6 82.4 90.2 98.0 105.8 113.6 121.4 129.2 137.0 144.8 152.6 160.4 168.2 176.0 183.8 191.6 199.4 207.2 215.0 222.8 230.6 238.4 246.2 254.0 261.8 269.6 277.4 285.2 293.0 300.8 308.6 316.4 324.2 332.0 339.8 347.6 355.4 363.2 371.0 378.8 386.6 394.4 402.2 410.0 417.8 425.6 433.4" y="755" fill="#8A938F">╰──────────────────────────────────────────────────╯</text>
+<text x="35.6 43.4 51.2 59.0" y="793" fill="#8A938F">done</text>
+<text x="74.6 82.4" y="793" fill="#8A938F">in</text>
+<text x="98.0 105.8 113.6 121.4" y="793" fill="#8A938F">6.2s</text>
+<text x="137.0" y="793" fill="#8A938F">·</text>
+<text x="152.6 160.4 168.2 176.0 183.8" y="793" fill="#8A938F">09:41</text>
+</g>
 </svg>

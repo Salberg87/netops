@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased: "calm signal" design
+
+### Added
+- Brand: pulse-and-dot mark, light/dark logos, 1024 px plugin icon, palette and
+  voice guide in `docs/brand/`.
+- `lib/verdict.js`: plain-language verdict ("All good", "Mostly fine", ...)
+  with one sentence and hints. It is shared by the CLI, the report, the JSON
+  `verdict` field and the pane.
+- CLI verdict card at the end of `diagnose` and `full`, a latency sparkline,
+  a pulse spinner, and elapsed time in the footer.
+- Redesigned `/netops` pane and status line (`∿ ✓ · 14 ms`).
+- `docs/preview.svg` is now generated from real CLI output
+  (`docs/demo/render.mjs` + `ansi2svg.py`); `docs/claude-pane.svg` shows the
+  plugin in Claude Code.
+
+### Changed
+- Palette: one sea-glass accent with softer status colors. Labels are dimmed
+  and values use the terminal foreground, so they read on light themes too
+  (labels used to be hard white).
+- Units are spaced (`18 ms`).
+
+### Fixed
+- `speed` and `full` printed progress with `console.log`, which broke
+  `--json` output.
+
 ## 2.2.0
 
 ### Added

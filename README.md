@@ -1,16 +1,27 @@
-# netops
-
-[![CI](https://github.com/Salberg87/netops/actions/workflows/ci.yml/badge.svg)](https://github.com/Salberg87/netops/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
-Open-source network diagnostics for humans **and for Claude**.
-
-- **A CLI** — one command to check connectivity, speed, DNS, ports, certificates, VPN status, Wi-Fi and more.
-- **A skill bundle** — four Claude skills that teach Claude *how* to troubleshoot a network: what to run, which numbers matter, and how to localise the fault.
-- **A Claude Code mod** — tools Claude can call directly (`mcp__netops__diagnose`, `mcp__netops__run`), a `/netops` health pane, and a status-line indicator.
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo-dark.svg">
+    <img src="docs/brand/logo-light.svg" alt="netops" width="380">
+  </picture>
+</p>
 
 <p align="center">
-  <img src="docs/preview.svg" alt="netops CLI output" width="620">
+  Plain-spoken network diagnostics, for you and for Claude.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Salberg87/netops/actions/workflows/ci.yml"><img src="https://github.com/Salberg87/netops/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3AA391.svg" alt="License: MIT"></a>
+</p>
+
+Ask why the internet is slow and get an answer you can act on, like *"Mostly fine. 20 ms to the internet, DNS answers in 9 ms. Latency spikes up to 61 ms; a cable usually helps."*
+
+- **A CLI.** One command checks connectivity, speed, DNS, ports, certificates, VPN and Wi-Fi, then ends with a plain-language verdict.
+- **A skill bundle.** Four Claude skills that teach Claude *how* to troubleshoot: what to run, which numbers matter, and how to find where the fault is.
+- **A Claude Code mod.** Tools Claude can call directly, a `/netops` health pane, and a quiet status-line indicator.
+
+<p align="center">
+  <img src="docs/claude-pane.svg" alt="netops in Claude Code: Claude explains a jitter problem while the Network health pane shows the numbers" width="860">
 </p>
 
 ## Install in Claude Code
@@ -52,7 +63,7 @@ Or type `/netops` to open the network health pane.
 | Tool | `mcp__netops__diagnose` | Runs the full suite and returns JSON with `issues` and `status` (optional speed test) |
 | Tool | `mcp__netops__run` | Runs one netops command with validated arguments |
 | Command | `/netops` | Opens the **Network health** pane: verdict, ping, jitter, DNS, VPN, issues, *Refresh* and *With speed test* buttons |
-| Status line | `net ✓ 14ms` | Latest result, updated after each run |
+| Status line | `∿ ✓ · 14 ms` | Latest result, updated after each run |
 
 The skills work on their own too (they fall back to the bundled CLI through Bash), so they are useful in any Claude environment that loads skills.
 
@@ -71,13 +82,19 @@ The skills work on their own too (they fall back to the bundled CLI through Bash
                  netops CLI (index.js, lib/)
 ```
 
-## Install the CLI
+## The CLI
+
+<p align="center">
+  <img src="docs/preview.svg" alt="netops diagnose: sections for connectivity, VPN, DNS, ping and latency, ending in a verdict card" width="476">
+</p>
+
+### Install
 
 ```bash
 npm install -g github:Salberg87/netops
 ```
 
-## Quick start
+### Quick start
 
 ```bash
 # Full diagnostic suite (~30-60s)
@@ -225,7 +242,9 @@ index.js, lib/    the CLI
 test/, tests/     CLI tests (node:test), mod tests (claude plugin test)
 ```
 
-Contributions are welcome — read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+The look and the voice are described in [docs/brand](docs/brand/README.md).
+
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Requirements
 

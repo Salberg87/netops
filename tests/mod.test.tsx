@@ -22,7 +22,7 @@ const REPORT = {
   ping: { success: true, avgTime: 14.2 },
   latency: { success: true, jitter: '41.0' },
   dnsSpeed: { avgTime: '9.5' },
-  issues: [{ severity: 'warn', area: 'latency', message: 'High jitter (41.0ms)' }],
+  issues: [{ severity: 'warn', area: 'latency', message: 'High jitter (41.0 ms)' }],
 }
 
 function engine(on: any, argvSeen: string[][]) {
@@ -58,7 +58,7 @@ test('diagnose tool fills the pane on every surface', async ($, on) => {
 
   for (const surface of ['terminal', 'desktop', 'vscode', 'mobile'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
-    expect((await ui.find({ type: 'Text', text: /Degraded/ })) !== undefined).toBe(true)
+    expect((await ui.find({ type: 'Text', text: /Mostly fine/ })) !== undefined).toBe(true)
     expect((await ui.find({ type: 'Text', text: /High jitter/ })) !== undefined).toBe(true)
     await ui.unmount()
   }
@@ -90,6 +90,6 @@ test('run tool builds argv for dns', async ($, on) => {
 test('empty pane invites a refresh', async ($, on) => {
   engine(on, [])
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect((await ui.find({ type: 'Text', text: /No results yet/ })) !== undefined).toBe(true)
+  expect((await ui.find({ type: 'Text', text: /How is the network doing/ })) !== undefined).toBe(true)
   await ui.unmount()
 })

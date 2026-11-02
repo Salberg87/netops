@@ -42,11 +42,15 @@ If `netops` is already on PATH (`npm i -g github:Salberg87/netops`), `netops --j
 | Low `speed.download/upload.speedMbps` | Plan limit, Wi-Fi, ISP congestion | `run wifi` (signal/SNR), try wired, compare to plan |
 
 3. Localise the fault: **gateway clean but upstream bad → ISP**; **gateway already bad → local network / Wi-Fi**; **only one site bad → that site or its DNS**.
-4. Report back in this shape:
-   - **Verdict** — one sentence (e.g. "Your connection is fine; DNS is slow").
+4. Report back in this shape. The JSON's `verdict` field (`headline`, `sentence`, `notes[].hint`) is already written in netops' voice, so start from it:
+   - **Verdict** — the headline and one sentence (e.g. "Mostly fine. Your connection is fast, but DNS is slow.").
    - **Evidence** — 2–4 key numbers with their thresholds.
    - **Fix** — concrete steps, most likely first.
    - **Re-test** — the single command that confirms the fix.
+
+## Voice
+
+Calm and specific, like a colleague who has already looked. Give numbers people can check, name one likely cause and one next step, and say what you don't know. Don't use exclamation marks, emoji, hype ("blazing fast"), or apologise for the network. See `docs/brand/README.md`.
 
 ## Thresholds (same as the CLI)
 

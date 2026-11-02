@@ -52,3 +52,5 @@ sh "<base>/../../scripts/netops" --json whois example.com
 ## Reporting
 
 Quote the records you actually saw (type, value, priority) and the response time. Distinguish clearly between "the record is missing" and "the lookup failed".
+
+Keep the voice calm and specific: the verdict first, numbers people can check, one next step. No exclamation marks or emoji.

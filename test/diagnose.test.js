@@ -51,6 +51,32 @@ test('report renders issues section', () => {
   const r = { ...healthy, issues: [{ severity: 'warn', area: 'dns', message: 'Slow DNS' }], status: 'warn' };
   const md = renderReport(r);
   assert.match(md, /^# Network Report/);
-  assert.match(md, /Overall: \*\*WARN\*\*/);
+  assert.match(md, /\*\*Mostly fine\.\*\* /);
   assert.match(md, /\[dns\] Slow DNS/);
+});
+
+import { verdict } from '../lib/verdict.js';
+
+test('verdict speaks plainly', () => {
+  const v = verdict({ ...healthy, issues: [], status: 'ok' });
+  assert.equal(v.headline, 'All good');
+  assert.equal(v.sentence, '15 ms to the internet, DNS answers in 12 ms and no VPN in the way.');
+  assert.deepEqual(v.notes, []);
+});
+
+test('verdict for offline gives a next step', () => {
+  const v = verdict({ connectivity: { connected: false }, issues: [], status: 'fail' });
+  assert.equal(v.headline, "You're offline");
+  assert.match(v.notes[0].hint, /router/);
+});
+
+test('verdict copy has no exclamation marks or emoji', () => {
+  const samples = [
+    verdict({ ...healthy, issues: [], status: 'ok' }),
+    verdict({ ...healthy, status: 'warn', issues: findIssues({ ...healthy, dnsSpeed: { avgTime: '90' }, latency: { ...healthy.latency, jitter: '50' } }) }),
+    verdict({ connectivity: { connected: false }, issues: [], status: 'fail' }),
+  ];
+  const text = JSON.stringify(samples);
+  assert.ok(!/!/.test(text), text);
+  assert.ok(!/\p{Extended_Pictographic}/u.test(text), text);
 });

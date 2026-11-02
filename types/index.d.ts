@@ -9,6 +9,8 @@ export type Summary = {
   downMbps?: number
   upMbps?: number
   vpn?: string
+  /** Latency samples in ms, for the sparkline. */
+  samples?: number[]
   issues: { severity: 'fail' | 'warn'; area: string; message: string }[]
 }
 

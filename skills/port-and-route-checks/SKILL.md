@@ -49,3 +49,5 @@ sh "<base>/../../scripts/netops" --json route
 ## Reporting
 
 State reachability plainly ("443 is open, 5432 times out — a firewall is dropping it"), then the most likely layer and the command to confirm after the fix.
+
+Keep the voice calm and specific: the verdict first, numbers people can check, one next step. No exclamation marks or emoji.
