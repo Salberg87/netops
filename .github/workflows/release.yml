@@ -1,10 +1,14 @@
 name: Release
 
-# Push a tag like v2.2.0 and this publishes a GitHub Release whose notes are
-# that version's section of CHANGELOG.md.
+# Publishes a GitHub Release whose notes are that version's section of
+# CHANGELOG.md. Two ways to start it:
+#   - push a tag like v2.2.0
+#   - run it by hand (Actions → Release → Run workflow) on main: it tags the
+#     current commit as v<package.json version> and releases that.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -15,17 +19,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check the tag matches package.json
+      - name: Work out the tag
         run: |
           want="v$(node -p "require('./package.json').version")"
-          if [ "$GITHUB_REF_NAME" != "$want" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version ($want)"
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            if [ "$GITHUB_REF_NAME" != "$want" ]; then
+              echo "::error::Tag $GITHUB_REF_NAME does not match package.json version ($want)"
+              exit 1
+            fi
+          elif [ "$GITHUB_REF_NAME" != "main" ]; then
+            echo "::error::Run this workflow by hand on main only (got $GITHUB_REF_NAME)"
+            exit 1
+          fi
+          echo "TAG=$want" >> "$GITHUB_ENV"
+
+      - name: Stop if this version is already released
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::$TAG is already released. Bump the version in package.json first."
             exit 1
           fi
 
       - name: Extract release notes from CHANGELOG.md
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          version="${TAG#v}"
           awk -v v="$version" '
             /^## / { if (found) exit; if (index($0, "## " v) == 1) { found = 1; next } }
             found { print }
@@ -52,7 +71,9 @@ jobs:
           MD
           cat notes.md
 
+      # For a tag push the tag already exists; by hand, `--target` makes
+      # GitHub create the tag on this commit.
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --title "netops $GITHUB_REF_NAME" --notes-file notes.md --verify-tag
+        run: gh release create "$TAG" --title "netops $TAG" --notes-file notes.md --target "$GITHUB_SHA"
