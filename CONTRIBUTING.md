@@ -61,5 +61,15 @@ claude plugin test .          # mod tests in tests/*.test.tsx
 4. Mention it in the relevant skill and in the README.
 5. Add tests.
 
+## Releasing
+
+1. Move the changes under a new `## x.y.z — YYYY-MM-DD` heading in
+   `CHANGELOG.md`, and bump `version` in `package.json` and
+   `.claude-plugin/plugin.json`.
+2. Merge to `main`, then tag the merge commit and push the tag:
+   `git tag vX.Y.Z && git push origin vX.Y.Z`.
+3. The Release workflow checks that the tag matches `package.json` and
+   publishes a GitHub Release with that version's changelog section as notes.
+
 By contributing you agree that your contributions are licensed under the MIT
 License, and to follow the [Code of Conduct](CODE_OF_CONDUCT.md).

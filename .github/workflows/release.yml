@@ -1,0 +1,58 @@
+name: Release
+
+# Push a tag like v2.2.0 and this publishes a GitHub Release whose notes are
+# that version's section of CHANGELOG.md.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the tag matches package.json
+        run: |
+          want="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$want" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version ($want)"
+            exit 1
+          fi
+
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            /^## / { if (found) exit; if (index($0, "## " v) == 1) { found = 1; next } }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "::error::No section for $version in CHANGELOG.md"
+            exit 1
+          fi
+          cat >> notes.md <<'MD'
+
+          ## Install
+
+          In Claude Code:
+
+          ```
+          /plugin install netops --marketplace Salberg87/netops
+          ```
+
+          The CLI on its own:
+
+          ```bash
+          npm install -g github:Salberg87/netops
+          ```
+          MD
+          cat notes.md
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "netops $GITHUB_REF_NAME" --notes-file notes.md --verify-tag
